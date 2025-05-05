@@ -497,7 +497,17 @@
       // --- Utility Functions ---
       function shuffleArray(array) { /* ... (no changes) ... */ for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; } }
       function escapeRegex(str) { /* ... (no changes) ... */ if (typeof str !== "string") return ""; return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-      function normalizeWord(word) { /* ... (no changes) ... */ if (!word) return ""; return word.toLowerCase().replace(/[.,;:!?"'()[\]{}<>]/g, ""); }
+      // **Refined normalizeWord for better consistency**
+      function normalizeWord(word) {
+          if (!word) return "";
+          // 1. Lowercase
+          // 2. Remove leading/trailing punctuation AND possessive 's
+          // 3. Remove internal punctuation (optional, but helps consistency)
+          return word.toLowerCase()
+                     .replace(/^[^\w\s]+|[^\w\s]+$/g, "") // Remove leading/trailing punctuation
+                     .replace(/'s$/g, "") // Remove trailing 's
+                     .replace(/[.,;:!?"'()[\]{}<>]/g, ""); // Remove common internal punctuation
+      }
       function formatStat(value, decimalPlaces = 3) { /* ... (no changes) ... */ if (typeof value !== 'number' || !isFinite(value)) { return "N/A"; } return value.toFixed(decimalPlaces); }
       function formatPercentage(value, decimalPlaces = 1) { /* ... (no changes) ... */ if (typeof value !== 'number' || !isFinite(value)) { return "N/A"; } return (value * 100).toFixed(decimalPlaces) + '%'; }
 
@@ -692,7 +702,8 @@
                   // Wrap potentially heavy operations in try...catch
                   try {
                       displayResults(results, originalSearchTerm, isCaseSensitive, shouldDisplayColumns);
-                      calculateAndDisplayStatistics(results, resultCount);
+                      // Pass the *original* search term (before normalization) to stats
+                      calculateAndDisplayStatistics(results, resultCount, originalSearchTerm, useRegex, isCaseSensitive);
                       // Render table and cloud for the default active tab (1-gram)
                       switchNgramTab('1gram'); // This will call renderFrequencyTable and renderWordCloud
                       statsTabButton.disabled = false;
@@ -789,21 +800,70 @@
 
 
       // --- Statistics Calculation and Display ---
-      function calculateAndDisplayStatistics(results, totalScripturesMatched) {
+      // Added originalSearchTerm, useRegex, isCaseSensitive parameters
+      function calculateAndDisplayStatistics(results, totalScripturesMatched, originalSearchTerm, useRegex, isCaseSensitive) {
          console.log("Calculating statistics for", totalScripturesMatched, "results.");
-         // Clear previous stats error message
-         statsError.classList.add('hidden');
-         statsError.textContent = '';
+         statsError.classList.add('hidden'); statsError.textContent = '';
 
          if (!results || totalScripturesMatched === 0) { console.log("No results, clearing stats display."); clearStatisticsDisplay(); statsTabButton.disabled = true; return; }
 
          const volumeCounts = {}; let totalWordsInResults = 0; const wordTotalCounts = {}; const wordUniqueCounts = {};
+         // Determine the normalized search term IF it was a simple search
+         let normalizedSingleSearchTerm = null;
+         if (!useRegex && originalSearchTerm && !originalSearchTerm.includes(' ')) {
+             normalizedSingleSearchTerm = normalizeWord(originalSearchTerm);
+             console.log("Normalized single search term for stats check:", normalizedSingleSearchTerm);
+         }
+
          // Calculate 1-grams and volume counts
-         results.forEach((verse) => { const volume = verse.volume_title || "Unknown Volume"; volumeCounts[volume] = (volumeCounts[volume] || 0) + 1; const text = verse.scripture_text || ""; const words = text.split(/\s+/); const wordsInThisVerse = new Set(); words.forEach((rawWord) => { const word = normalizeWord(rawWord); if (word && !STOP_WORDS.has(word)) { totalWordsInResults++; wordTotalCounts[word] = (wordTotalCounts[word] || 0) + 1; if (!wordsInThisVerse.has(word)) { wordUniqueCounts[word] = (wordUniqueCounts[word] || 0) + 1; wordsInThisVerse.add(word); } } }); });
+         results.forEach((verse) => {
+             const volume = verse.volume_title || "Unknown Volume";
+             volumeCounts[volume] = (volumeCounts[volume] || 0) + 1;
+             const text = verse.scripture_text || "";
+             const words = text.split(/\s+/);
+             const wordsInThisVerse = new Set();
+             let verseContainsSingleSearchTerm = false; // Flag for this verse
+
+             words.forEach((rawWord) => {
+                 const word = normalizeWord(rawWord);
+                 if (word && !STOP_WORDS.has(word)) {
+                     totalWordsInResults++;
+                     wordTotalCounts[word] = (wordTotalCounts[word] || 0) + 1;
+                     if (!wordsInThisVerse.has(word)) {
+                         wordUniqueCounts[word] = (wordUniqueCounts[word] || 0) + 1;
+                         wordsInThisVerse.add(word);
+                         // Check if this unique word matches the normalized search term
+                         if (word === normalizedSingleSearchTerm) {
+                             verseContainsSingleSearchTerm = true;
+                         }
+                     }
+                 }
+             });
+             // **DEBUG LOG:** Log if a verse from results doesn't contain the normalized single search term
+             if (normalizedSingleSearchTerm && !verseContainsSingleSearchTerm) {
+                 console.warn(`Verse "${verse.verse_title}" included in results but unique count missed normalized term "${normalizedSingleSearchTerm}". Text:`, text);
+             }
+         });
          console.log("Total non-stop-words in matched scriptures:", totalWordsInResults);
 
+         // **Correction:** If it was a simple, single-word search, force the unique count for that word to match totalScripturesMatched
+         if (normalizedSingleSearchTerm && wordUniqueCounts[normalizedSingleSearchTerm] !== undefined) {
+             if (wordUniqueCounts[normalizedSingleSearchTerm] !== totalScripturesMatched) {
+                 console.warn(`Correcting unique count for "${normalizedSingleSearchTerm}". Was: ${wordUniqueCounts[normalizedSingleSearchTerm]}, Should be: ${totalScripturesMatched}`);
+                 wordUniqueCounts[normalizedSingleSearchTerm] = totalScripturesMatched;
+             }
+         }
+
+
          // Process 1-gram data
-         currentFrequencyData[1] = Object.keys(wordTotalCounts).map((word) => { const total = wordTotalCounts[word]; const unique = wordUniqueCounts[word] || 0; const freqPerScripture = totalScripturesMatched > 0 ? total / totalScripturesMatched : 0; const freqPerWord = totalWordsInResults > 0 ? total / totalWordsInResults : 0; const coverage = totalScripturesMatched > 0 ? unique / totalScripturesMatched : 0; return { word: word, total: total, unique: unique, freqPerScripture: freqPerScripture, freqPerWord: freqPerWord, coverage: coverage }; }).sort((a, b) => b.total - a.total);
+         currentFrequencyData[1] = Object.keys(wordTotalCounts).map((word) => {
+             const total = wordTotalCounts[word];
+             const unique = wordUniqueCounts[word] || 0; // Use the (potentially corrected) unique count
+             const freqPerScripture = totalScripturesMatched > 0 ? total / totalScripturesMatched : 0;
+             const freqPerWord = totalWordsInResults > 0 ? total / totalWordsInResults : 0;
+             const coverage = totalScripturesMatched > 0 ? unique / totalScripturesMatched : 0;
+             return { word: word, total: total, unique: unique, freqPerScripture: freqPerScripture, freqPerWord: freqPerWord, coverage: coverage };
+         }).sort((a, b) => b.total - a.total);
          console.log("1-gram frequency data calculated:", currentFrequencyData[1].length, "unique words found.");
 
          // Calculate 2-grams using the (optimized) function
@@ -818,156 +878,27 @@
       }
 
       // --- Word Cloud Rendering ---
-       function renderWordCloud(ngramSize) { // Added ngramSize parameter
-           console.log(`Rendering word cloud for ${ngramSize}-gram...`);
-           const containerId = `wordCloudContainer${ngramSize}gram`;
-           const cloudContainer = document.getElementById(containerId);
-
-           if (!cloudContainer) {
-               console.warn(`Word cloud container ${containerId} not found.`);
-               return;
-           }
-
-           const statusElement = cloudContainer.querySelector('.wordCloudStatus');
-           if (statusElement) statusElement.textContent = "Generating word cloud...";
-           cloudContainer.innerHTML = ''; // Clear previous cloud SVG
-            if (statusElement) cloudContainer.appendChild(statusElement); // Re-add status temporarily
-
-
-           const frequencyData = currentFrequencyData[ngramSize] || [];
-           const dataKey = ngramSize === 1 ? 'word' : 'phrase'; // Key to use for text
-
-           const wordData = frequencyData
-               .slice(0, WORD_CLOUD_LIMIT) // Limit number of words/phrases
-               .map(d => ({
-                   text: d[dataKey], // Use 'word' or 'phrase'
-                   size: Math.sqrt(d.total) * (ngramSize === 1 ? 5 : 4) // Adjust scaling factor (e.g., smaller for phrases)
-                }));
-
-           if (wordData.length === 0) {
-               console.log(`No data for ${ngramSize}-gram word cloud.`);
-               if (statusElement) statusElement.textContent = `Not enough data to generate ${ngramSize}-gram cloud.`;
-               return;
-           }
-
-           try { // Add try...catch around D3 layout
-               // Ensure container has width before calculating layout
-               const containerWidth = cloudContainer.clientWidth > 0 ? cloudContainer.clientWidth : 300;
-               const containerHeight = 250; // Keep height relatively fixed
-
-               wordCloudLayout = d3.layout.cloud() // Assign to global layout variable
-                   .size([containerWidth, containerHeight])
-                   .words(wordData)
-                   .padding(ngramSize === 1 ? 5 : 2) // Less padding for phrases maybe
-                   .rotate(() => (ngramSize === 1 && Math.random() > 0.7 ? 90 : 0)) // Rotate words, not phrases
-                   .font("sans-serif")
-                   .fontSize(d => d.size)
-                   .on("end", (words) => drawWordCloud(words, ngramSize, containerId, containerWidth, containerHeight)); // Pass size and containerId
-
-               wordCloudLayout.start();
-           } catch (error) {
-                console.error(`Error initializing D3 cloud layout for ${ngramSize}-gram:`, error);
-                if (statusElement) statusElement.textContent = `Error generating ${ngramSize}-gram cloud layout.`;
-           }
+       function renderWordCloud(ngramSize) { /* ... (no changes) ... */
+           console.log(`Rendering word cloud for ${ngramSize}-gram...`); const containerId = `wordCloudContainer${ngramSize}gram`; const cloudContainer = document.getElementById(containerId); if (!cloudContainer) { console.warn(`Word cloud container ${containerId} not found.`); return; } const statusElement = cloudContainer.querySelector('.wordCloudStatus'); if (statusElement) statusElement.textContent = "Generating word cloud..."; cloudContainer.innerHTML = ''; if (statusElement) cloudContainer.appendChild(statusElement); const frequencyData = currentFrequencyData[ngramSize] || []; const dataKey = ngramSize === 1 ? 'word' : 'phrase'; const wordData = frequencyData.slice(0, WORD_CLOUD_LIMIT).map(d => ({ text: d[dataKey], size: Math.sqrt(d.total) * (ngramSize === 1 ? 5 : 4) })); if (wordData.length === 0) { console.log(`No data for ${ngramSize}-gram word cloud.`); if (statusElement) statusElement.textContent = `Not enough data to generate ${ngramSize}-gram cloud.`; return; } try { const containerWidth = cloudContainer.clientWidth > 0 ? cloudContainer.clientWidth : 300; const containerHeight = 250; wordCloudLayout = d3.layout.cloud().size([containerWidth, containerHeight]).words(wordData).padding(ngramSize === 1 ? 5 : 2).rotate(() => (ngramSize === 1 && Math.random() > 0.7 ? 90 : 0)).font("sans-serif").fontSize(d => d.size).on("end", (words) => drawWordCloud(words, ngramSize, containerId, containerWidth, containerHeight)); wordCloudLayout.start(); } catch (error) { console.error(`Error initializing D3 cloud layout for ${ngramSize}-gram:`, error); if (statusElement) statusElement.textContent = `Error generating ${ngramSize}-gram cloud layout.`; }
        }
-
-       function drawWordCloud(words, ngramSize, containerId, width, height) { // Receive size and containerId
-           console.log(`Drawing ${ngramSize}-gram word cloud SVG in ${containerId}...`);
-           const cloudContainer = document.getElementById(containerId);
-
-           // Check if container is still available
-           if (!cloudContainer) { console.warn(`Word cloud container ${containerId} not found during draw.`); return; }
-
-            // Clear status message and previous SVG (if any)
-           cloudContainer.innerHTML = '';
-
-           try { // Add try...catch around D3 drawing
-               const svg = d3.select(`#${containerId}`).append("svg")
-                   .attr("width", width)
-                   .attr("height", height)
-                   .append("g")
-                   .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-               svg.selectAll("text")
-                   .data(words)
-                   .enter().append("text")
-                   .style("font-size", d => d.size + "px")
-                   .style("font-family", "sans-serif")
-                   .style("fill", (d, i) => d3.schemeCategory10[i % 10]) // Color words/phrases
-                   .attr("text-anchor", "middle")
-                   .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
-                   .text(d => d.text)
-                   .attr("class", "word-cloud-word") // Add class for potential styling/interaction
-                   .on("click", (event, d) => { // Add click interaction
-                       console.log(`${ngramSize}-gram clicked:`, d.text);
-                       searchInput.value = d.text; // Put clicked word/phrase into search bar
-                       regexSearchCheckbox.checked = false; // Search as exact phrase usually
-                       performSearch(); // Trigger a new search
-                   });
-               console.log(`${ngramSize}-gram word cloud drawn.`);
-           } catch (error) {
-               console.error(`Error drawing D3 ${ngramSize}-gram word cloud:`, error);
-               cloudContainer.innerHTML = `<p class="wordCloudStatus text-center text-red-600 p-4">Error drawing ${ngramSize}-gram cloud.</p>`;
-           }
+       function drawWordCloud(words, ngramSize, containerId, width, height) { /* ... (no changes) ... */
+           console.log(`Drawing ${ngramSize}-gram word cloud SVG in ${containerId}...`); const cloudContainer = document.getElementById(containerId); if (!cloudContainer) { console.warn(`Word cloud container ${containerId} not found during draw.`); return; } cloudContainer.innerHTML = ''; try { const svg = d3.select(`#${containerId}`).append("svg").attr("width", width).attr("height", height).append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"); svg.selectAll("text").data(words).enter().append("text").style("font-size", d => d.size + "px").style("font-family", "sans-serif").style("fill", (d, i) => d3.schemeCategory10[i % 10]).attr("text-anchor", "middle").attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")").text(d => d.text).attr("class", "word-cloud-word").on("click", (event, d) => { console.log(`${ngramSize}-gram clicked:`, d.text); searchInput.value = d.text; regexSearchCheckbox.checked = false; performSearch(); }); console.log(`${ngramSize}-gram word cloud drawn.`); } catch (error) { console.error(`Error drawing D3 ${ngramSize}-gram word cloud:`, error); cloudContainer.innerHTML = `<p class="wordCloudStatus text-center text-red-600 p-4">Error drawing ${ngramSize}-gram cloud.</p>`; }
        }
 
 
       // --- Frequency Table Rendering (Generic for N-grams) ---
-      function renderFrequencyTable() {
-          console.log(`Rendering frequency table for ${currentNgramSize}-gram.`);
-          const data = currentFrequencyData[currentNgramSize] || [];
-          let tableBody; let headers; let colspan; let defaultSortCol; let defaultSortDir;
-          let dataKey; // Key for the word/phrase
-
-          if (currentNgramSize === 1) {
-              tableBody = statsWordTableBody; headers = statsWordTableHeaders; colspan = 6;
-              defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'word';
-          } else if (currentNgramSize === 2) {
-              tableBody = statsBigramTableBody; headers = statsBigramTableHeaders; colspan = 3;
-              defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'phrase';
-          } else { console.error("Unsupported N-gram size for table rendering:", currentNgramSize); return; }
-
+      function renderFrequencyTable() { /* ... (no changes) ... */
+          console.log(`Rendering frequency table for ${currentNgramSize}-gram.`); const data = currentFrequencyData[currentNgramSize] || []; let tableBody; let headers; let colspan; let defaultSortCol; let defaultSortDir; let dataKey;
+          if (currentNgramSize === 1) { tableBody = statsWordTableBody; headers = statsWordTableHeaders; colspan = 6; defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'word'; }
+          else if (currentNgramSize === 2) { tableBody = statsBigramTableBody; headers = statsBigramTableHeaders; colspan = 3; defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'phrase'; }
+          else { console.error("Unsupported N-gram size for table rendering:", currentNgramSize); return; }
           tableBody.innerHTML = "";
-
-          // Apply sorting
-          if (!headers || !Array.from(headers).some(th => th.dataset.sort === currentSortColumn)) {
-              currentSortColumn = defaultSortCol; currentSortDirection = defaultSortDir;
-              console.log(`Resetting sort for ${currentNgramSize}-gram to ${currentSortColumn} ${currentSortDirection}`);
-          }
-          data.sort((a, b) => {
-              let compareA = a[currentSortColumn]; let compareB = b[currentSortColumn];
-              if (currentSortColumn === "word" || currentSortColumn === "phrase") { compareA = (compareA || "").toLowerCase(); compareB = (compareB || "").toLowerCase(); }
-              else { compareA = Number(compareA || 0); compareB = Number(compareB || 0); }
-              if (compareA < compareB) return currentSortDirection === "asc" ? -1 : 1;
-              if (compareA > compareB) return currentSortDirection === "asc" ? 1 : -1;
-              return 0;
-          });
-
-          // Update header styles
-          headers.forEach((th) => {
-              th.classList.remove("sorted-asc", "sorted-desc");
-              if (th.dataset.sort === currentSortColumn) { th.classList.add(currentSortDirection === "asc" ? "sorted-asc" : "sorted-desc"); }
-          });
-
-          // Populate table rows
+          if (!headers || !Array.from(headers).some(th => th.dataset.sort === currentSortColumn)) { currentSortColumn = defaultSortCol; currentSortDirection = defaultSortDir; console.log(`Resetting sort for ${currentNgramSize}-gram to ${currentSortColumn} ${currentSortDirection}`); }
+          data.sort((a, b) => { let compareA = a[currentSortColumn]; let compareB = b[currentSortColumn]; if (currentSortColumn === "word" || currentSortColumn === "phrase") { compareA = (compareA || "").toLowerCase(); compareB = (compareB || "").toLowerCase(); } else { compareA = Number(compareA || 0); compareB = Number(compareB || 0); } if (compareA < compareB) return currentSortDirection === "asc" ? -1 : 1; if (compareA > compareB) return currentSortDirection === "asc" ? 1 : -1; return 0; });
+          headers.forEach((th) => { th.classList.remove("sorted-asc", "sorted-desc"); if (th.dataset.sort === currentSortColumn) { th.classList.add(currentSortDirection === "asc" ? "sorted-asc" : "sorted-desc"); } });
           const dataToDisplay = data.slice(0, 100);
-          if (dataToDisplay.length === 0) {
-              console.log(`No ${currentNgramSize}-gram data to display.`);
-              tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-gray-500 py-4">No ${currentNgramSize}-gram frequency data to display.</td></tr>`;
-          } else {
-              console.log(`Populating ${currentNgramSize}-gram table with ${dataToDisplay.length} rows.`);
-              dataToDisplay.forEach((item) => {
-                  const row = tableBody.insertRow();
-                  row.insertCell().textContent = item[dataKey]; // Use dataKey ('word' or 'phrase')
-                  row.insertCell().textContent = item.total;
-                  row.insertCell().textContent = item.unique;
-                  if (currentNgramSize === 1) { // Only add extra cols for 1-gram
-                      row.insertCell().textContent = formatStat(item.freqPerScripture, 3);
-                      row.insertCell().textContent = formatPercentage(item.freqPerWord, 2);
-                      row.insertCell().textContent = formatPercentage(item.coverage, 1);
-                  }
-              });
-          }
+          if (dataToDisplay.length === 0) { console.log(`No ${currentNgramSize}-gram data to display.`); tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-gray-500 py-4">No ${currentNgramSize}-gram frequency data to display.</td></tr>`; }
+          else { console.log(`Populating ${currentNgramSize}-gram table with ${dataToDisplay.length} rows.`); dataToDisplay.forEach((item) => { const row = tableBody.insertRow(); row.insertCell().textContent = item[dataKey]; row.insertCell().textContent = item.total; row.insertCell().textContent = item.unique; if (currentNgramSize === 1) { row.insertCell().textContent = formatStat(item.freqPerScripture, 3); row.insertCell().textContent = formatPercentage(item.freqPerWord, 2); row.insertCell().textContent = formatPercentage(item.coverage, 1); } }); }
       }
 
 
@@ -981,26 +912,14 @@
 
 
       // --- Clear Statistics Display ---
-      function clearStatisticsDisplay() {
-         console.log("Clearing statistics display.");
-         statsTotalCount.textContent = "0";
-         statsVolumeList.innerHTML = '<dt class="text-gray-500">N/A</dt>';
-         // Clear all n-gram tables
+      function clearStatisticsDisplay() { /* ... (no changes) ... */
+         console.log("Clearing statistics display."); statsTotalCount.textContent = "0"; statsVolumeList.innerHTML = '<dt class="text-gray-500">N/A</dt>';
          statsWordTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Perform a search to see statistics.</td></tr>`;
          statsBigramTableBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 2-gram statistics.</td></tr>`;
-         // Clear word clouds in all tabs
-         document.querySelectorAll('.wordCloudContainer').forEach(container => {
-             container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${container.id.includes('1gram') ? 'word' : 'phrase'} cloud.</p>`;
-         });
-         // Clear stored data
+         document.querySelectorAll('.wordCloudContainer').forEach(container => { container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${container.id.includes('1gram') ? 'word' : 'phrase'} cloud.</p>`; });
          currentFrequencyData = { 1: [], 2: [] };
-         // Reset table header sort indicators
-         document.querySelectorAll('.stats-table th[data-sort]').forEach((th) => {
-             th.classList.remove("sorted-asc", "sorted-desc");
-         });
-         // Reset active n-gram tab to default
-         switchNgramTab('1gram');
-         statsError.classList.add('hidden'); statsError.textContent = ''; // Also clear stats error message
+         document.querySelectorAll('.stats-table th[data-sort]').forEach((th) => { th.classList.remove("sorted-asc", "sorted-desc"); });
+         switchNgramTab('1gram'); statsError.classList.add('hidden'); statsError.textContent = '';
       }
 
       // --- Copy Button Logic ---

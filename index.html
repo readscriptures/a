@@ -157,7 +157,7 @@
       .stats-table th.sorted-desc .sort-arrow::after { content: " ▼"; color: #374151; }
       .stats-table tbody tr:nth-child(even) { background-color: #f9fafb; }
 
-      /* NEW: Volume Breakdown Chart Style */
+      /* Volume Breakdown Chart Style */
       #statsVolumeChartContainer {
           width: 100%;
           min-height: 200px; /* Adjust as needed */
@@ -193,7 +193,7 @@
           dominant-baseline: central;
       }
 
-      /* NEW: Word Forms Breakdown Style */
+      /* Word Forms Breakdown Style */
        #statsWordFormsContainer {
            font-size: 0.875rem;
            margin-top: 0.5rem;
@@ -209,6 +209,10 @@
            padding-left: 0;
            max-height: 150px; /* Limit height and make scrollable if needed */
            overflow-y: auto;
+           border: 1px solid #e5e7eb; /* Added border */
+           border-radius: 0.375rem; /* Added border radius */
+           padding: 0.5rem; /* Added padding */
+           background-color: #f9fafb; /* Light background */
        }
        #statsWordFormsContainer li {
            display: flex;
@@ -235,6 +239,11 @@
            color: #6b7280; /* gray-500 */
            font-size: 0.9em;
            margin-top: 0.25rem;
+           padding: 0.5rem; /* Added padding */
+           border: 1px solid #e5e7eb; /* Added border */
+           border-radius: 0.375rem; /* Added border radius */
+           background-color: #f9fafb; /* Light background */
+           text-align: center;
        }
 
 
@@ -520,6 +529,7 @@
       let booksMap = new Map();
       let volumeCheckboxElements = [];
       let currentFrequencyData = { 1: [], 2: [] };
+      let currentVolumeChartData = null; // **NEW: Store chart data globally**
       let currentSortColumn = "total";
       let currentSortDirection = "desc";
       let firstSearchPerformed = false;
@@ -560,30 +570,23 @@
       const scripturesTabCount = document.getElementById("scripturesTabCount");
       const statsDisplayArea = document.getElementById("statsDisplayArea");
       const statsTotalCount = document.getElementById("statsTotalCount");
-      // NEW: Volume Chart and Word Forms Breakdown refs
       const statsVolumeChartContainer = document.getElementById("statsVolumeChartContainer");
       const statsWordFormsContainer = document.getElementById("statsWordFormsContainer");
       const statsWordFormsList = statsWordFormsContainer.querySelector('.word-form-list');
       const statsWordFormsPlaceholder = statsWordFormsContainer.querySelector('.no-forms');
-      // Word Cloud Elements (Now selected dynamically)
-      // N-gram Tab Elements
       const ngramTabContainer = document.getElementById("ngramTabContainer");
       const ngramTabButtons = ngramTabContainer.querySelectorAll(".ngram-tab-button");
       const ngramTabContentContainer = document.getElementById("ngramTabContentContainer");
       const ngramTabContents = ngramTabContentContainer.querySelectorAll(".ngram-tab-content");
-      // Stats Table Elements (1-gram)
       const statsWordTable = document.getElementById("statsWordTable");
       const statsWordTableBody = document.getElementById("statsWordTableBody");
       const statsWordTableHeaders = statsWordTable.querySelectorAll("thead th[data-sort]");
-      // Stats Table Elements (2-gram)
       const statsBigramTable = document.getElementById("statsBigramTable");
       const statsBigramTableBody = document.getElementById("statsBigramTableBody");
       const statsBigramTableHeaders = statsBigramTable.querySelectorAll("thead th[data-sort]");
-      // Stats Explanation Modal Elements
       const explainStatsButton = document.getElementById("explainStatsButton");
       const statsHelpModalOverlay = document.getElementById("statsHelpModalOverlay");
       const statsHelpModalCloseButton = document.getElementById("statsHelpModalCloseButton");
-      // Stats Error Message Area
       const statsError = document.getElementById("statsError");
 
 
@@ -685,20 +688,34 @@
       showAdvancedOptionsButton.addEventListener("click", () => toggleAdvancedSearchArea(false));
 
       // --- Main Tab Switching (Scriptures/Statistics) ---
-      function switchTab(tabName) { /* ... (no changes) ... */
-          console.log("Switching tab to:", tabName); scripturesContent.classList.remove("active"); statisticsContent.classList.remove("active");
-          scripturesTabButton.classList.remove("active"); statsTabButton.classList.remove("active");
-          if (tabName === "scriptures") { scripturesContent.classList.add("active"); scripturesTabButton.classList.add("active"); }
-          else if (tabName === "statistics") {
-              if (!statsTabButton.disabled) { statisticsContent.classList.add("active"); statsTabButton.classList.add("active"); }
-              else { console.warn("Attempted to switch to disabled stats tab. Staying on scriptures tab."); scripturesContent.classList.add("active"); scripturesTabButton.classList.add("active"); }
+      function switchTab(tabName) {
+          console.log("Switching main tab to:", tabName);
+          scripturesContent.classList.remove("active");
+          statisticsContent.classList.remove("active");
+          scripturesTabButton.classList.remove("active");
+          statsTabButton.classList.remove("active");
+
+          if (tabName === "scriptures") {
+              scripturesContent.classList.add("active");
+              scripturesTabButton.classList.add("active");
+          } else if (tabName === "statistics") {
+              if (!statsTabButton.disabled) {
+                  statisticsContent.classList.add("active");
+                  statsTabButton.classList.add("active");
+                  // **MODIFIED: Trigger N-gram tab switch (which now renders chart) when stats tab is activated**
+                  switchNgramTab(currentNgramSize === 1 ? '1gram' : '2gram');
+              } else {
+                  console.warn("Attempted to switch to disabled stats tab. Staying on scriptures tab.");
+                  scripturesContent.classList.add("active");
+                  scripturesTabButton.classList.add("active");
+              }
           }
       }
       scripturesTabButton.addEventListener("click", () => switchTab("scriptures"));
       statsTabButton.addEventListener("click", () => switchTab("statistics"));
 
       // --- N-gram Tab Switching (within Statistics) ---
-      function switchNgramTab(targetTab) { /* ... (no changes) ... */
+      function switchNgramTab(targetTab) {
           console.log("Switching N-gram tab to:", targetTab);
           currentNgramSize = parseInt(targetTab.replace('gram', ''), 10); // Update global tracker
 
@@ -711,23 +728,39 @@
           if(activeContent) activeContent.classList.add('active');
           if(activeButton) activeButton.classList.add('active');
 
-          // Render the table and word cloud for the now active n-gram size
-          renderFrequencyTable();
-          const cloudContainerId = `wordCloudContainer${currentNgramSize}gram`;
-          if (document.getElementById(cloudContainerId)) {
-             renderWordCloud(currentNgramSize);
+          // **MODIFIED: Render volume chart, frequency table, and word cloud when N-gram tab is switched**
+          // Ensure this only runs if the main statistics tab is actually active
+          if (statisticsContent.classList.contains('active')) {
+              // Render Volume Chart (if data exists)
+              if (currentVolumeChartData) {
+                  renderVolumeChart(currentVolumeChartData);
+              } else {
+                  // Ensure placeholder is shown if no data
+                  statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">Perform a search to generate volume chart.</p>';
+              }
+
+              // Render the frequency table for the current n-gram size
+              renderFrequencyTable();
+
+              // Render the word cloud for the current n-gram size
+              const cloudContainerId = `wordCloudContainer${currentNgramSize}gram`;
+              if (document.getElementById(cloudContainerId)) {
+                 renderWordCloud(currentNgramSize);
+              } else {
+                 console.log(`No word cloud container found for ${currentNgramSize}-gram.`);
+              }
           } else {
-             console.log(`No word cloud container found for ${currentNgramSize}-gram.`);
+              console.log("N-gram switch called, but statistics tab is not active. Deferring rendering.");
           }
       }
-      ngramTabButtons.forEach(button => { /* ... (no changes) ... */
+      ngramTabButtons.forEach(button => {
           button.addEventListener('click', () => switchNgramTab(button.dataset.ngramTab));
       });
 
 
       // --- Search Logic ---
       function getSelectedVolumes() { /* ... (no changes) ... */ return volumeCheckboxElements.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value); }
-      async function performSearch() { /* ... (no changes except passing originalSearchTerm to stats) ... */
+      async function performSearch() { /* ... (no changes) ... */
           console.log("--- Starting Search ---");
           if (firstSearchPerformed) { console.log("Collapsing advanced options after subsequent search."); toggleAdvancedSearchArea(true); }
           else { console.log("First search, not collapsing advanced options yet."); }
@@ -735,7 +768,7 @@
           searchInputError.textContent = ""; verseTitleFilterError.textContent = ""; searchStatus.textContent = "";
           resultsContainer.innerHTML = ""; noResultsMessage.classList.add("hidden"); clearStatisticsDisplay(); statsTabButton.disabled = true;
           statsError.classList.add('hidden'); statsError.textContent = '';
-          switchTab("scriptures");
+          switchTab("scriptures"); // Always switch back to scriptures tab on new search
 
           let searchTerm = searchInput.value.trim(); const originalSearchTerm = searchTerm; // Keep original for stats
           const verseTitleFilterTerm = verseTitleFilterInput.value.trim();
@@ -785,9 +818,9 @@
                   console.log("Displaying results and calculating stats...");
                   try {
                       displayResults(results, originalSearchTerm, isCaseSensitive, shouldDisplayColumns);
-                      // **MODIFIED: Pass originalSearchTerm and useRegex flag**
                       calculateAndDisplayStatistics(results, resultCount, originalSearchTerm, useRegex);
-                      switchNgramTab('1gram');
+                      // **MODIFIED: Don't switch n-gram tab here, let main tab switch handle it**
+                      // switchNgramTab('1gram'); // <- REMOVED
                       statsTabButton.disabled = false;
                       console.log("Stats tab enabled.");
                   } catch (statsError) { /* ... (stats error handling) ... */
@@ -875,10 +908,10 @@
 
 
       // --- Statistics Calculation and Display ---
-      // **MODIFIED: Added originalSearchTerm, useRegex parameters for word forms**
       function calculateAndDisplayStatistics(results, totalScripturesMatched, originalSearchTerm, useRegex) {
          console.log("Calculating statistics for", totalScripturesMatched, "results.");
          statsError.classList.add('hidden'); statsError.textContent = '';
+         currentVolumeChartData = null; // **MODIFIED: Reset chart data**
 
          if (!results || totalScripturesMatched === 0) { console.log("No results, clearing stats display."); clearStatisticsDisplay(); statsTabButton.disabled = true; return; }
 
@@ -886,9 +919,8 @@
          let totalWordsInResults = 0;
          const wordTotalCounts = {}; // Counts for individual normalized words
          const wordUniqueCounts = {}; // Unique verses per individual normalized word
-         const wordFormsCounts = {}; // NEW: Counts for variations of the search term
+         const wordFormsCounts = {}; // Counts for variations of the search term
 
-         // Determine if we should calculate word forms (non-regex, single word search)
          const calculateWordForms = !useRegex && originalSearchTerm && !originalSearchTerm.includes(' ') && !originalSearchTerm.match(/\s+(AND|OR)\s+/i);
          const normalizedSearchTermPrefix = calculateWordForms ? normalizeWord(originalSearchTerm) : null;
          console.log("Calculate Word Forms:", calculateWordForms, "Prefix:", normalizedSearchTermPrefix);
@@ -900,22 +932,17 @@
 
              const text = verse.scripture_text || "";
              const words = text.split(/\s+/);
-             const uniqueWordsInThisVerse = new Set(); // Track unique normalized words per verse
+             const uniqueWordsInThisVerse = new Set();
 
              words.forEach((rawWord) => {
                  const word = normalizeWord(rawWord);
                  if (word && !STOP_WORDS.has(word)) {
                      totalWordsInResults++;
-                     // Increment total count for this specific word
                      wordTotalCounts[word] = (wordTotalCounts[word] || 0) + 1;
-
-                     // Increment unique count for this specific word if first time in this verse
                      if (!uniqueWordsInThisVerse.has(word)) {
                          wordUniqueCounts[word] = (wordUniqueCounts[word] || 0) + 1;
                          uniqueWordsInThisVerse.add(word);
                      }
-
-                     // NEW: Check for word forms if applicable
                      if (calculateWordForms && word.startsWith(normalizedSearchTermPrefix)) {
                          wordFormsCounts[word] = (wordFormsCounts[word] || 0) + 1;
                      }
@@ -928,124 +955,135 @@
          // --- Process 1-gram data for the table ---
          currentFrequencyData[1] = Object.keys(wordTotalCounts).map((word) => {
              const total = wordTotalCounts[word];
-             const unique = wordUniqueCounts[word] || 0; // Use the unique count for this specific word
+             const unique = wordUniqueCounts[word] || 0;
              const freqPerScripture = totalScripturesMatched > 0 ? total / totalScripturesMatched : 0;
              const freqPerWord = totalWordsInResults > 0 ? total / totalWordsInResults : 0;
              const coverage = totalScripturesMatched > 0 ? unique / totalScripturesMatched : 0;
              return { word: word, total: total, unique: unique, freqPerScripture: freqPerScripture, freqPerWord: freqPerWord, coverage: coverage };
-         }).sort((a, b) => b.total - a.total); // Sort by total count initially
+         }).sort((a, b) => b.total - a.total);
          console.log("1-gram frequency data calculated:", currentFrequencyData[1].length, "unique words found.");
 
          // --- Calculate 2-grams ---
          currentFrequencyData[2] = calculateNGrams(results, 2);
 
-         // --- Populate Stats Tab ---
+         // --- Populate Stats Summary and Word Forms ---
          statsTotalCount.textContent = totalScripturesMatched;
+         renderWordFormsBreakdown(wordFormsCounts, calculateWordForms);
 
-         // NEW: Prepare data for and render Volume Chart
-         const volumeChartData = HARDCODED_VOLUME_ORDER.map(volume => ({
+         // --- **MODIFIED: Prepare and Store Volume Chart Data (Don't render yet)** ---
+         const volumeChartDataSource = HARDCODED_VOLUME_ORDER.map(volume => ({
              volume: volume,
              count: volumeCounts[volume] || 0
          })).filter(d => d.count > 0); // Only include volumes with counts > 0
-         // Add any remaining volumes not in the hardcoded list
          Object.keys(volumeCounts).forEach(volume => {
              if (!HARDCODED_VOLUME_ORDER.includes(volume)) {
-                 volumeChartData.push({ volume: volume, count: volumeCounts[volume] });
+                 volumeChartDataSource.push({ volume: volume, count: volumeCounts[volume] });
              }
          });
-         renderVolumeChart(volumeChartData);
+         currentVolumeChartData = volumeChartDataSource; // Store data globally
+         console.log("Volume chart data stored:", currentVolumeChartData);
 
-         // NEW: Render Word Forms Breakdown
-         renderWordFormsBreakdown(wordFormsCounts, calculateWordForms);
+         // --- **REMOVED: Call to renderVolumeChart here** ---
+         // renderVolumeChart(volumeChartData); // <- REMOVED
 
-         // Don't switch tab here, let performSearch handle calling switchNgramTab after success
-         console.log("Statistics calculation complete.");
+         console.log("Statistics calculation complete (chart rendering deferred).");
       }
 
-      // --- NEW: D3 Volume Chart Rendering ---
+      // --- D3 Volume Chart Rendering ---
       function renderVolumeChart(data) {
-          console.log("Rendering volume chart with data:", data);
-          statsVolumeChartContainer.innerHTML = ''; // Clear previous chart/placeholder
-
+          // **MODIFIED: Added check for data validity**
           if (!data || data.length === 0) {
+              console.log("renderVolumeChart called with no data. Displaying placeholder.");
               statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">No volume data to display.</p>';
               return;
           }
+          console.log("Rendering volume chart with data:", data);
+          statsVolumeChartContainer.innerHTML = ''; // Clear previous chart/placeholder
 
           // --- D3 Chart Setup ---
-          const containerWidth = statsVolumeChartContainer.clientWidth;
-          if (!containerWidth) {
-              console.warn("Volume chart container has no width. Cannot render chart.");
-              statsVolumeChartContainer.innerHTML = '<p class="text-xs text-red-500 italic text-center pt-4">Error rendering chart (container width 0).</p>';
-              return;
-          }
+          // **MODIFIED: Added slight delay with setTimeout to allow DOM update**
+          // This helps ensure clientWidth is calculated correctly after the tab becomes visible.
+          setTimeout(() => {
+              const containerWidth = statsVolumeChartContainer.clientWidth;
+              if (!containerWidth) {
+                  console.warn("Volume chart container has no width even after delay. Cannot render chart.");
+                  statsVolumeChartContainer.innerHTML = '<p class="text-xs text-red-500 italic text-center pt-4">Error rendering chart (container width 0).</p>';
+                  return;
+              }
+              console.log("Container width for chart:", containerWidth);
 
-          const margin = { top: 10, right: 30, bottom: 20, left: 150 }; // Increased left margin for labels
-          const barHeight = 25;
-          const height = data.length * barHeight + margin.top + margin.bottom;
-          const width = containerWidth - margin.left - margin.right;
+              const margin = { top: 10, right: 30, bottom: 20, left: 150 }; // Increased left margin for labels
+              const barHeight = 25;
+              const height = data.length * barHeight + margin.top + margin.bottom;
+              const width = containerWidth - margin.left - margin.right;
 
-          const svg = d3.select("#statsVolumeChartContainer")
-              .append("svg")
-              .attr("width", containerWidth)
-              .attr("height", height)
-              .append("g")
-              .attr("transform", `translate(${margin.left},${margin.top})`);
+              // Check for non-positive width which causes D3 errors
+              if (width <= 0) {
+                  console.warn(`Calculated chart width is non-positive (${width}). Cannot render chart.`);
+                   statsVolumeChartContainer.innerHTML = `<p class="text-xs text-red-500 italic text-center pt-4">Error rendering chart (calculated width ${width}).</p>`;
+                  return;
+              }
 
-          // --- Scales ---
-          const yScale = d3.scaleBand()
-              .domain(data.map(d => d.volume))
-              .range([0, height - margin.top - margin.bottom])
-              .padding(0.2); // Padding between bars
+              const svg = d3.select("#statsVolumeChartContainer")
+                  .append("svg")
+                  .attr("width", containerWidth)
+                  .attr("height", height)
+                  .append("g")
+                  .attr("transform", `translate(${margin.left},${margin.top})`);
 
-          const xScale = d3.scaleLinear()
-              .domain([0, d3.max(data, d => d.count) || 1]) // Ensure domain starts at 0, handle max=0
-              .range([0, width]);
+              // --- Scales ---
+              const yScale = d3.scaleBand()
+                  .domain(data.map(d => d.volume))
+                  .range([0, height - margin.top - margin.bottom])
+                  .padding(0.2);
 
-          // --- Axes ---
-          const yAxis = d3.axisLeft(yScale).tickSizeOuter(0); // No outer ticks
-          svg.append("g")
-             .attr("class", "y axis")
-             .call(yAxis)
-             // Truncate long labels if necessary (optional)
-             .selectAll(".tick text")
-             .call(wrapAxisText, margin.left - 10); // Adjust wrap width
+              const xScale = d3.scaleLinear()
+                  .domain([0, d3.max(data, d => d.count) || 1])
+                  .range([0, width]);
 
+              // --- Axes ---
+              const yAxis = d3.axisLeft(yScale).tickSizeOuter(0);
+              svg.append("g")
+                 .attr("class", "y axis")
+                 .call(yAxis)
+                 .selectAll(".tick text")
+                 .call(wrapAxisText, margin.left - 10);
 
-          const xAxis = d3.axisBottom(xScale).ticks(Math.min(5, d3.max(data, d => d.count))).tickFormat(d3.format("d")); // Integer format, max 5 ticks
-          svg.append("g")
-             .attr("class", "x axis")
-             .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-             .call(xAxis);
+              const xAxis = d3.axisBottom(xScale).ticks(Math.min(5, d3.max(data, d => d.count))).tickFormat(d3.format("d"));
+              svg.append("g")
+                 .attr("class", "x axis")
+                 .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+                 .call(xAxis);
 
-          // --- Bars ---
-          svg.selectAll(".bar")
-             .data(data)
-             .enter()
-             .append("rect")
-             .attr("class", "bar")
-             .attr("y", d => yScale(d.volume))
-             .attr("height", yScale.bandwidth())
-             .attr("x", 0)
-             .attr("width", 0) // Start width at 0 for transition
-             .transition() // Add transition
-             .duration(500) // Duration in ms
-             .attr("width", d => xScale(d.count));
+              // --- Bars ---
+              svg.selectAll(".bar")
+                 .data(data)
+                 .enter()
+                 .append("rect")
+                 .attr("class", "bar")
+                 .attr("y", d => yScale(d.volume))
+                 .attr("height", yScale.bandwidth())
+                 .attr("x", 0)
+                 .attr("width", 0)
+                 .transition()
+                 .duration(500)
+                 .attr("width", d => Math.max(0, xScale(d.count))); // Ensure width is not negative
 
-          // --- Bar Labels (Counts) ---
-          svg.selectAll(".bar-label")
-              .data(data)
-              .enter()
-              .append("text")
-              .attr("class", "bar-label")
-              .attr("y", d => yScale(d.volume) + yScale.bandwidth() / 2)
-              .attr("x", d => xScale(d.count) + 5) // Position label just after the bar
-              .text(d => d.count);
+              // --- Bar Labels (Counts) ---
+              svg.selectAll(".bar-label")
+                  .data(data)
+                  .enter()
+                  .append("text")
+                  .attr("class", "bar-label")
+                  .attr("y", d => yScale(d.volume) + yScale.bandwidth() / 2)
+                  .attr("x", d => Math.max(0, xScale(d.count)) + 5) // Position label after bar, ensure positive x
+                  .text(d => d.count);
 
-          console.log("Volume chart rendered.");
+              console.log("Volume chart rendered.");
+          }, 50); // 50ms delay - adjust if needed
       }
       // Helper function to wrap long axis labels (optional)
-      function wrapAxisText(text, width) {
+      function wrapAxisText(text, width) { /* ... (no changes) ... */
           text.each(function() {
               const text = d3.select(this);
               const words = text.text().split(/\s+/).reverse();
@@ -1070,8 +1108,8 @@
       }
 
 
-      // --- NEW: Word Forms Breakdown Rendering ---
-      function renderWordFormsBreakdown(formsData, wasSingleWordSearch) {
+      // --- Word Forms Breakdown Rendering ---
+      function renderWordFormsBreakdown(formsData, wasSingleWordSearch) { /* ... (no changes) ... */
           console.log("Rendering word forms breakdown:", formsData);
           statsWordFormsList.innerHTML = ''; // Clear previous list
 
@@ -1141,12 +1179,12 @@
 
 
       // --- Clear Statistics Display ---
-      // **MODIFIED: Clear new chart and breakdown areas**
       function clearStatisticsDisplay() {
          console.log("Clearing statistics display.");
          statsTotalCount.textContent = "0";
-         // Clear Volume Chart
+         // Clear Volume Chart and its data
          statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">Perform a search to generate volume chart.</p>';
+         currentVolumeChartData = null; // **MODIFIED: Clear stored chart data**
          // Clear Word Forms Breakdown
          statsWordFormsList.innerHTML = '';
          statsWordFormsPlaceholder.textContent = "Perform a non-regex, single-word search to see breakdown.";
@@ -1159,7 +1197,10 @@
          document.querySelectorAll('.wordCloudContainer').forEach(container => { container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${container.id.includes('1gram') ? 'word' : 'phrase'} cloud.</p>`; });
          currentFrequencyData = { 1: [], 2: [] };
          document.querySelectorAll('.stats-table th[data-sort]').forEach((th) => { th.classList.remove("sorted-asc", "sorted-desc"); });
-         switchNgramTab('1gram'); statsError.classList.add('hidden'); statsError.textContent = '';
+         // **MODIFIED: Don't switch N-gram tab here, let initial setup or main tab switch handle it**
+         // switchNgramTab('1gram'); // <- REMOVED
+         statsError.classList.add('hidden'); statsError.textContent = '';
+         currentNgramSize = 1; // Reset to default
       }
 
       // --- Copy Button Logic ---
@@ -1169,13 +1210,24 @@
 
 
       // --- Initial Setup ---
-      document.addEventListener("DOMContentLoaded", function () { /* ... (no changes) ... */
-          console.log("DOM Loaded. Setting up event listeners."); searchButton.addEventListener("click", performSearch);
-          searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") performSearch(); }); verseTitleFilterInput.addEventListener("keypress", (e) => { if (e.key === "Enter") performSearch(); });
+      document.addEventListener("DOMContentLoaded", function () {
+          console.log("DOM Loaded. Setting up event listeners.");
+          searchButton.addEventListener("click", performSearch);
+          searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") performSearch(); });
+          verseTitleFilterInput.addEventListener("keypress", (e) => { if (e.key === "Enter") performSearch(); });
           columnsByVolumeCheckbox.addEventListener("change", () => { console.log("Columns by Volume checkbox changed."); const hasResults = resultsContainer.hasChildNodes() && !noResultsMessage.classList.contains('hidden'); const hasActiveFilters = searchInput.value.trim() || verseTitleFilterInput.value.trim() || getSelectedVolumes().length < volumeCheckboxElements.length; if (hasResults) { console.log("Triggering search due to column change with existing results."); performSearch(); } else { console.log("Column view changed, but no results currently displayed. No search triggered."); resultsContainer.className = columnsByVolumeCheckbox.checked ? "results-flex-container" : "results-grid-container"; } });
-          console.log("Triggering initial data load."); fetchScriptureData().catch((err) => { console.error("Initial data load failed:", err); });
-          renderFrequencyTable(); toggleAdvancedSearchArea(false); toggleAdvancedSearchButton.style.display = 'inline-flex'; toggleAdvancedSearchLink.style.display = 'none';
-          switchNgramTab('1gram'); clearStatisticsDisplay();
+          console.log("Triggering initial data load.");
+          fetchScriptureData().catch((err) => { console.error("Initial data load failed:", err); });
+          // **MODIFIED: Don't render frequency table or switch n-gram tab initially**
+          // renderFrequencyTable(); // <- REMOVED
+          toggleAdvancedSearchArea(false);
+          toggleAdvancedSearchButton.style.display = 'inline-flex';
+          toggleAdvancedSearchLink.style.display = 'none';
+          // switchNgramTab('1gram'); // <- REMOVED
+          clearStatisticsDisplay(); // Clear display initially
+          // Ensure default N-gram tab button looks active
+          ngramTabButtons.forEach(btn => btn.classList.remove('active'));
+          ngramTabContainer.querySelector('[data-ngram-tab="1gram"]').classList.add('active');
       });
     </script>
   </body>

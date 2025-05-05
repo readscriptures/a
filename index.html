@@ -510,7 +510,7 @@
           statsTabButton.disabled = true; statsTabButton.classList.remove("active"); scripturesTabButton.classList.add("active");
           scripturesContent.classList.add("active"); statisticsContent.classList.remove("active");
           try {
-              const response = await fetch("assets/scriptures/lds-scriptures.json");
+              const response = await fetch("lds-scriptures.json");
               if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}, Failed to fetch scripture data.`); }
               const data = await response.json(); if (!Array.isArray(data)) { throw new Error("Scripture data is not in the expected array format."); }
               console.log(`Successfully fetched and parsed ${data.length} scripture entries.`); scriptureCache.lds = data;

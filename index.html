@@ -15,7 +15,7 @@
     <script src="https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@1.2.7/build/d3.layout.cloud.min.js"></script>
 
     <style>
-      /* Styles remain the same as the previous version */
+      /* Styles from previous version remain largely the same */
       body {
         font-family: "Inter", sans-serif;
         background-color: #f9fafb; /* gray-50 */
@@ -157,10 +157,86 @@
       .stats-table th.sorted-desc .sort-arrow::after { content: " ▼"; color: #374151; }
       .stats-table tbody tr:nth-child(even) { background-color: #f9fafb; }
 
-      /* Volume Breakdown Style */
-       #statsVolumeBreakdown dl { column-count: 2; column-gap: 2rem; }
-       #statsVolumeBreakdown dt { font-weight: 500; color: #374151; }
-       #statsVolumeBreakdown dd { margin-left: 0.5rem; color: #6b7280; margin-bottom: 0.25rem; font-size: 0.9em;}
+      /* NEW: Volume Breakdown Chart Style */
+      #statsVolumeChartContainer {
+          width: 100%;
+          min-height: 200px; /* Adjust as needed */
+          margin-bottom: 1rem;
+          position: relative; /* For potential tooltips or overlays */
+      }
+      #statsVolumeChartContainer svg {
+          display: block; /* Prevent extra space */
+          width: 100%;
+          height: auto; /* Let height be determined by content */
+      }
+      #statsVolumeChartContainer .axis path,
+      #statsVolumeChartContainer .axis line {
+          fill: none;
+          stroke: #9ca3af; /* gray-400 */
+          shape-rendering: crispEdges;
+      }
+      #statsVolumeChartContainer .axis text {
+          font-size: 0.75rem; /* 12px */
+          fill: #4b5563; /* gray-600 */
+      }
+      #statsVolumeChartContainer .bar {
+          fill: #60a5fa; /* blue-400 */
+          transition: fill 0.2s ease-in-out;
+      }
+      #statsVolumeChartContainer .bar:hover {
+          fill: #3b82f6; /* blue-500 */
+      }
+      #statsVolumeChartContainer .bar-label {
+          fill: #1f2937; /* gray-800 */
+          font-size: 0.75rem; /* 12px */
+          text-anchor: start;
+          dominant-baseline: central;
+      }
+
+      /* NEW: Word Forms Breakdown Style */
+       #statsWordFormsContainer {
+           font-size: 0.875rem;
+           margin-top: 0.5rem;
+       }
+       #statsWordFormsContainer h5 {
+           font-weight: 600;
+           color: #4b5563; /* gray-600 */
+           margin-bottom: 0.25rem;
+           font-size: 0.9em;
+       }
+       #statsWordFormsContainer ul {
+           list-style: none;
+           padding-left: 0;
+           max-height: 150px; /* Limit height and make scrollable if needed */
+           overflow-y: auto;
+       }
+       #statsWordFormsContainer li {
+           display: flex;
+           justify-content: space-between;
+           padding: 0.1rem 0;
+           font-size: 0.9em;
+           color: #374151; /* gray-700 */
+       }
+        #statsWordFormsContainer li span:first-child {
+           margin-right: 0.5rem; /* Space between word and count */
+           word-break: break-all; /* Prevent long words overflowing */
+       }
+       #statsWordFormsContainer li span:last-child {
+           font-weight: 500;
+           color: #1f2937; /* gray-800 */
+           white-space: nowrap;
+       }
+       #statsWordFormsContainer .word-form-list::-webkit-scrollbar { width: 5px; }
+       #statsWordFormsContainer .word-form-list::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+       #statsWordFormsContainer .word-form-list::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
+       #statsWordFormsContainer .word-form-list::-webkit-scrollbar-thumb:hover { background: #718096; }
+       #statsWordFormsContainer p.no-forms { /* Style for when no forms are found */
+           font-style: italic;
+           color: #6b7280; /* gray-500 */
+           font-size: 0.9em;
+           margin-top: 0.25rem;
+       }
+
 
       /* Word Cloud Style */
       .wordCloudContainer { /* Use class instead of ID */
@@ -274,7 +350,8 @@
 
       <div class="tab-content-container max-w-full mx-auto">
         <div id="scripturesContent" class="tab-content active">
-          <div id="noResults" class="hidden bg-gray-50 p-8 rounded-lg text-center max-w-4xl mx-auto"><p class="text-gray-600"></p></div> <div id="resultsContainer"></div>
+          <div id="noResults" class="hidden bg-gray-50 p-8 rounded-lg text-center max-w-4xl mx-auto"><p class="text-gray-600"></p></div>
+          <div id="resultsContainer"></div>
         </div>
 
         <div id="statisticsContent" class="tab-content">
@@ -285,20 +362,24 @@
                      <span class="info-icon mr-1">i</span>Explain Statistics
                  </button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-6">
                 <div>
                     <div id="statsSummary" class="mb-4 space-y-1">
                         <p><strong>Total Unique Scriptures Matched:</strong> <span id="statsTotalCount">0</span></p>
                     </div>
-                    <div id="statsVolumeBreakdown">
-                        <h4 class="text-md font-semibold mb-2 text-gray-600">Matches per Volume:</h4>
-                        <dl id="statsVolumeList" class="text-sm">
-                           <dt class="text-gray-500">N/A</dt>
-                        </dl>
+                    <div id="statsWordFormsContainer">
+                        <h5 class="text-sm font-semibold mb-1 text-gray-600">Word Forms Breakdown:</h5>
+                        <p class="no-forms text-xs text-gray-500 italic">Perform a non-regex, single-word search to see breakdown.</p>
+                        <ul class="word-form-list"></ul>
                     </div>
                 </div>
                 <div>
-                     </div>
+                    <h4 class="text-md font-semibold mb-2 text-gray-600">Matches per Volume:</h4>
+                    <div id="statsVolumeChartContainer">
+                         <p class="text-xs text-gray-500 italic text-center pt-4">Perform a search to generate volume chart.</p>
+                    </div>
+                </div>
             </div>
 
             <div id="statsNgramSection">
@@ -307,7 +388,7 @@
                 <div id="ngramTabContainer" class="ngram-tab-container">
                     <button class="ngram-tab-button active" data-ngram-tab="1gram">1-gram (Words)</button>
                     <button class="ngram-tab-button" data-ngram-tab="2gram">2-gram (Pairs)</button>
-                    </div>
+                </div>
                 <div id="ngramTabContentContainer">
                     <div id="1gramContent" class="ngram-tab-content active">
                         <div class="mb-4">
@@ -350,7 +431,7 @@
                                         <th data-sort="phrase">Phrase (2-gram) <span class="sort-arrow"></span></th>
                                         <th data-sort="total">Total Count <span class="sort-arrow"></span></th>
                                         <th data-sort="unique">Unique Count <span class="sort-arrow"></span></th>
-                                        </tr>
+                                    </tr>
                                 </thead>
                                 <tbody id="statsBigramTableBody">
                                     <tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 2-gram statistics.</td></tr>
@@ -358,11 +439,15 @@
                             </table>
                         </div>
                     </div>
-                    </div>
+                </div>
             </div>
              <div id="statsError" class="text-red-600 text-sm mt-4 hidden"></div>
           </div>
-        </div> </div> </div> <div id="searchHelpModalOverlay" class="modal-overlay">
+        </div>
+      </div>
+    </div>
+
+    <div id="searchHelpModalOverlay" class="modal-overlay">
         <div class="modal-box"><button id="searchHelpModalCloseButton" class="modal-close-button">&times;</button><div class="modal-content"><h3>What is this?</h3><p>What scripture search tool do you know of that can let you find all scriptures with both "faith" and "Jesus" in them? Or the verse first mentions "faith" and then "hope", in that order? This app solves those powerful search needs.</p><h3>How to Search</h3><p>You can search for exact phrases, use keywords with AND/OR, or enable full regular expressions.</p><h4>Keyword Search (AND/OR)</h4><p>If the "Search using regex" box is <strong>not</strong> checked:</p><ul><li><strong>AND Search:</strong> Type words separated by <code> AND </code> (e.g., <code>faith AND hope</code>). Finds verses with <strong>both</strong> words, in any order. Auto-converted to regex: <code>faith.*?hope|hope.*?faith</code>.</li><li><strong>OR Search:</strong> Type words separated by <code> OR </code> (e.g., <code>love OR charity</code>). Finds verses with <strong>either</strong> word. Auto-converted to regex: <code>love|charity</code>.</li><li><strong>Note:</strong> <code>AND</code> takes precedence over <code>OR</code> if both are used without regex mode. Use regex mode for complex logic.</li></ul><h4>Exact Phrase Search</h4><p>If you don't use <code>AND</code>/<code>OR</code> and regex is off, it searches for the exact word sequence.</p><h4>Regular Expression (Regex) Search</h4><p>Check "Search using regex" to use regex patterns.</p><ul><li>Example: <code>^And it came to pass</code> (Starts with...).</li><li>Example: <code>Nephi|Lehi</code> (Contains either).</li><li>Example: <code>baptis(m|ed)</code> (Contains "baptism" or "baptised").</li></ul><p>Consider the "Case Sensitive" option.</p><h4>Verse Title Filter</h4><p>Always uses case-insensitive regex.</p><ul><li>Example: <code>^Moroni 10:</code> (All verses in Moroni 10).</li><li>Example: <code>1 Nephi 3:7$</code> (Exactly 1 Nephi 3:7).</li><li>Example: <code>(John|Luke) \d+:1$</code> (First verse of any chapter in John or Luke).</li></ul><h4>Volume Filters</h4><p>Use checkboxes to select which volumes to include.</p></div></div>
     </div>
 
@@ -376,14 +461,18 @@
           <h4>Overall Summary</h4>
           <dl>
               <dt>Total Unique Scriptures Matched</dt>
-              <dd>The total number of distinct scripture verses returned by your current search filters.</dd>
+              <dd>The total number of distinct scripture verses returned by your current search filters and criteria.</dd>
           </dl>
 
-          <h4>Matches per Volume</h4>
-           <dl>
-               <dt>Volume Name: Count</dt>
-               <dd>Shows how many of the matched scriptures belong to each volume (e.g., Book of Mormon: 257).</dd>
-           </dl>
+          <h4>Matches per Volume Chart</h4>
+           <p>A horizontal bar chart showing the number of matched scriptures belonging to each volume.</p>
+
+          <h4>Word Forms Breakdown</h4>
+          <p>If you performed a non-regex search for a single word (e.g., "faith"), this section shows the counts for different words found in the results that start with your normalized search term (e.g., "faith", "faithful", "faithfulness"). This helps clarify how the total match count relates to specific word variations.</p>
+          <dl>
+              <dt>Word Form: Count</dt>
+              <dd>Shows the total number of times each specific word form appears across all matched scriptures.</dd>
+          </dl>
 
           <h4>N-gram Analysis Section</h4>
           <p>This section shows the most common words (1-gram) or phrases (2-gram) found in the matched scriptures, excluding common stop words. Each tab provides a word/phrase cloud visualization and a frequency table.</p>
@@ -392,24 +481,25 @@
            <p>A visual representation of the most frequent items (words or phrases) for the selected N-gram size. Larger items appear more frequently. Clicking an item will search for it.</p>
 
           <h5>Frequency Tables</h5>
+          <p>These tables show detailed counts for individual words (1-gram) or phrases (2-gram).</p>
           <dl>
             <dt>Word / Phrase</dt>
-            <dd>The specific word (1-gram) or sequence of words (2-gram) being analyzed.</dd>
+            <dd>The specific normalized word (1-gram) or sequence of words (2-gram) being analyzed.</dd>
 
             <dt>Total Count</dt>
-            <dd>The absolute total number of times this word/phrase appears across ALL matched scriptures. A word/phrase can appear multiple times in a single scripture.</dd>
+            <dd>The absolute total number of times this <strong>specific word/phrase</strong> appears across ALL matched scriptures. A word/phrase can appear multiple times in a single scripture.</dd>
 
             <dt>Unique Count</dt>
-            <dd>The number of unique scriptures (out of the 'Total Unique Scriptures Matched') that contain this word/phrase at least once.</dd>
+            <dd>The number of unique scriptures (out of the 'Total Unique Scriptures Matched') that contain this <strong>specific word/phrase</strong> at least once.</dd>
 
             <dt>Freq/Scripture (1-gram only)</dt>
-            <dd>Average number of times this specific word appears per matched scripture. Calculated as: <code>Total Count / Total Unique Scriptures Matched</code>.</dd>
+            <dd>Average number of times this specific word appears per matched scripture. Calculated as: <code>Word's Total Count / Total Unique Scriptures Matched</code>.</dd>
 
             <dt>Freq/Word (1-gram only)</dt>
-            <dd>The proportion of this specific word relative to all non-stop-words counted across all matched scriptures. Calculated as: <code>Total Count / Total Non-Stop-Words in Matched Scriptures</code>.</dd>
+            <dd>The proportion of this specific word relative to all non-stop-words counted across all matched scriptures. Calculated as: <code>Word's Total Count / Total Non-Stop-Words in Matched Scriptures</code>.</dd>
 
             <dt>Coverage (1-gram only)</dt>
-            <dd>The percentage of matched scriptures that contain this specific word at least once. Calculated as: <code>Unique Count / Total Unique Scriptures Matched</code>.</dd>
+            <dd>The percentage of matched scriptures that contain this specific word at least once. Calculated as: <code>Word's Unique Count / Total Unique Scriptures Matched</code>.</dd>
           </dl>
 
         </div>
@@ -437,7 +527,6 @@
       let wordCloudLayout = null; // Store the layout object
 
       // --- DOM Element References ---
-      // (Existing refs remain the same)
       const volumeCheckboxesContainer = document.getElementById("volumeCheckboxes");
       const allVolumesCheckbox = document.getElementById("allVolumesCheckbox");
       const searchInput = document.getElementById("searchInput");
@@ -471,7 +560,11 @@
       const scripturesTabCount = document.getElementById("scripturesTabCount");
       const statsDisplayArea = document.getElementById("statsDisplayArea");
       const statsTotalCount = document.getElementById("statsTotalCount");
-      const statsVolumeList = document.getElementById("statsVolumeList");
+      // NEW: Volume Chart and Word Forms Breakdown refs
+      const statsVolumeChartContainer = document.getElementById("statsVolumeChartContainer");
+      const statsWordFormsContainer = document.getElementById("statsWordFormsContainer");
+      const statsWordFormsList = statsWordFormsContainer.querySelector('.word-form-list');
+      const statsWordFormsPlaceholder = statsWordFormsContainer.querySelector('.no-forms');
       // Word Cloud Elements (Now selected dynamically)
       // N-gram Tab Elements
       const ngramTabContainer = document.getElementById("ngramTabContainer");
@@ -497,12 +590,8 @@
       // --- Utility Functions ---
       function shuffleArray(array) { /* ... (no changes) ... */ for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; } }
       function escapeRegex(str) { /* ... (no changes) ... */ if (typeof str !== "string") return ""; return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-      // **Refined normalizeWord for better consistency**
-      function normalizeWord(word) {
+      function normalizeWord(word) { /* ... (no changes) ... */
           if (!word) return "";
-          // 1. Lowercase
-          // 2. Remove leading/trailing punctuation AND possessive 's
-          // 3. Remove internal punctuation (optional, but helps consistency)
           return word.toLowerCase()
                      .replace(/^[^\w\s]+|[^\w\s]+$/g, "") // Remove leading/trailing punctuation
                      .replace(/'s$/g, "") // Remove trailing 's
@@ -565,18 +654,15 @@
       }
 
       // --- Modal Control ---
-      function openModal(overlayElement) { overlayElement.classList.add("active"); }
-      function closeModal(overlayElement) { overlayElement.classList.remove("active"); }
-      // Search Help Modal
+      function openModal(overlayElement) { /* ... (no changes) ... */ overlayElement.classList.add("active"); }
+      function closeModal(overlayElement) { /* ... (no changes) ... */ overlayElement.classList.remove("active"); }
       howToSearchButton.addEventListener("click", () => openModal(searchHelpModalOverlay));
       searchHelpModalCloseButton.addEventListener("click", () => closeModal(searchHelpModalOverlay));
       searchHelpModalOverlay.addEventListener("click", (event) => { if (event.target === searchHelpModalOverlay) closeModal(searchHelpModalOverlay); });
-      // Stats Help Modal
       explainStatsButton.addEventListener("click", () => openModal(statsHelpModalOverlay));
       statsHelpModalCloseButton.addEventListener("click", () => closeModal(statsHelpModalOverlay));
       statsHelpModalOverlay.addEventListener("click", (event) => { if (event.target === statsHelpModalOverlay) closeModal(statsHelpModalOverlay); });
-      // Escape key closes any active modal
-      document.addEventListener("keydown", (event) => {
+      document.addEventListener("keydown", (event) => { /* ... (no changes) ... */
           if (event.key === "Escape") {
               if (searchHelpModalOverlay.classList.contains("active")) closeModal(searchHelpModalOverlay);
               if (statsHelpModalOverlay.classList.contains("active")) closeModal(statsHelpModalOverlay);
@@ -612,7 +698,7 @@
       statsTabButton.addEventListener("click", () => switchTab("statistics"));
 
       // --- N-gram Tab Switching (within Statistics) ---
-      function switchNgramTab(targetTab) {
+      function switchNgramTab(targetTab) { /* ... (no changes) ... */
           console.log("Switching N-gram tab to:", targetTab);
           currentNgramSize = parseInt(targetTab.replace('gram', ''), 10); // Update global tracker
 
@@ -627,7 +713,6 @@
 
           // Render the table and word cloud for the now active n-gram size
           renderFrequencyTable();
-          // Only render word cloud if the container exists for this tab
           const cloudContainerId = `wordCloudContainer${currentNgramSize}gram`;
           if (document.getElementById(cloudContainerId)) {
              renderWordCloud(currentNgramSize);
@@ -635,32 +720,32 @@
              console.log(`No word cloud container found for ${currentNgramSize}-gram.`);
           }
       }
-      ngramTabButtons.forEach(button => {
+      ngramTabButtons.forEach(button => { /* ... (no changes) ... */
           button.addEventListener('click', () => switchNgramTab(button.dataset.ngramTab));
       });
 
 
       // --- Search Logic ---
       function getSelectedVolumes() { /* ... (no changes) ... */ return volumeCheckboxElements.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value); }
-      async function performSearch() {
+      async function performSearch() { /* ... (no changes except passing originalSearchTerm to stats) ... */
           console.log("--- Starting Search ---");
           if (firstSearchPerformed) { console.log("Collapsing advanced options after subsequent search."); toggleAdvancedSearchArea(true); }
           else { console.log("First search, not collapsing advanced options yet."); }
 
           searchInputError.textContent = ""; verseTitleFilterError.textContent = ""; searchStatus.textContent = "";
           resultsContainer.innerHTML = ""; noResultsMessage.classList.add("hidden"); clearStatisticsDisplay(); statsTabButton.disabled = true;
-          statsError.classList.add('hidden'); // Hide stats error message
-          statsError.textContent = '';
+          statsError.classList.add('hidden'); statsError.textContent = '';
           switchTab("scriptures");
 
-          let searchTerm = searchInput.value.trim(); const originalSearchTerm = searchTerm; const verseTitleFilterTerm = verseTitleFilterInput.value.trim();
+          let searchTerm = searchInput.value.trim(); const originalSearchTerm = searchTerm; // Keep original for stats
+          const verseTitleFilterTerm = verseTitleFilterInput.value.trim();
           const selectedVolumes = getSelectedVolumes(); let useRegex = regexSearchCheckbox.checked; const isCaseSensitive = caseSensitiveCheckbox.checked;
           const shouldDisplayColumns = columnsByVolumeCheckbox.checked; const shouldShuffle = shuffleResultsCheckbox.checked; let wasAutoConverted = false;
 
-          if (selectedVolumes.length === 0) { /* ... (no changes - volume validation) ... */ console.log("Search stopped: No volumes selected."); resultsContainer.className = ""; resultsHeadingText.textContent = "Results"; scripturesTabCount.textContent = "0"; noResultsMessage.textContent = "Please select at least one volume to search."; noResultsMessage.classList.remove("hidden"); loadingIndicator.classList.add("hidden"); return; }
+          if (selectedVolumes.length === 0) { /* ... (volume validation) ... */ console.log("Search stopped: No volumes selected."); resultsContainer.className = ""; resultsHeadingText.textContent = "Results"; scripturesTabCount.textContent = "0"; noResultsMessage.textContent = "Please select at least one volume to search."; noResultsMessage.classList.remove("hidden"); loadingIndicator.classList.add("hidden"); return; }
           console.log("Selected Volumes:", selectedVolumes);
 
-          // --- Regex Pre-processing & Validation (no changes) ---
+          // --- Regex Pre-processing & Validation ---
           let generatedRegexString = null; if (!useRegex && searchTerm) { const andMatch = searchTerm.match(/^(.*?)\s+AND\s+(.*?)$/i); const orMatch = searchTerm.match(/^(.*?)\s+OR\s+(.*?)$/i); if (andMatch) { const term1 = escapeRegex(andMatch[1].trim()); const term2 = escapeRegex(andMatch[2].trim()); generatedRegexString = `(${term1}.*?${term2}|${term2}.*?${term1})`; useRegex = true; wasAutoConverted = true; console.log("AND detected, using regex:", generatedRegexString); } else if (orMatch) { const term1 = escapeRegex(orMatch[1].trim()); const term2 = escapeRegex(orMatch[2].trim()); generatedRegexString = `(${term1}|${term2})`; useRegex = true; wasAutoConverted = true; console.log("OR detected, using regex:", generatedRegexString); } }
           let mainSearchRegex = null; if (useRegex && (searchTerm || generatedRegexString)) { try { const pattern = generatedRegexString || searchTerm; if (!pattern) throw new Error("Regex pattern is empty."); mainSearchRegex = new RegExp(pattern, isCaseSensitive ? "g" : "gi"); console.log("Main search regex compiled:", mainSearchRegex); } catch (e) { console.error("Invalid main search regex:", e); searchInputError.textContent = `Invalid Regex: ${e.message}`; return; } }
           let verseTitleRegex = null; if (verseTitleFilterTerm) { try { verseTitleRegex = new RegExp(verseTitleFilterTerm, "i"); console.log("Verse title regex compiled:", verseTitleRegex); } catch (e) { console.error("Invalid verse title regex:", e); verseTitleFilterError.textContent = `Invalid Regex: ${e.message}`; return; } }
@@ -669,18 +754,18 @@
           loadingIndicator.classList.remove("hidden"); resultsContainer.className = shouldDisplayColumns ? "results-flex-container" : "results-grid-container";
           let results = [];
           try {
-              const data = await fetchScriptureData(); if (!Array.isArray(data) || data.length === 0) { /* ... (no changes - data validation) ... */ console.error("performSearch cannot proceed: Invalid or empty data received."); if (!scripturesContent.querySelector(".bg-red-100")) { resultsHeadingText.textContent = "Results"; scripturesTabCount.textContent = "0"; noResultsMessage.textContent = "No scripture data is available to search."; noResultsMessage.classList.remove("hidden"); } loadingIndicator.classList.add("hidden"); return; }
+              const data = await fetchScriptureData(); if (!Array.isArray(data) || data.length === 0) { /* ... (data validation) ... */ console.error("performSearch cannot proceed: Invalid or empty data received."); if (!scripturesContent.querySelector(".bg-red-100")) { resultsHeadingText.textContent = "Results"; scripturesTabCount.textContent = "0"; noResultsMessage.textContent = "No scripture data is available to search."; noResultsMessage.classList.remove("hidden"); } loadingIndicator.classList.add("hidden"); return; }
               console.log(`Processing ${data.length} scripture entries.`);
 
-              // --- Filtering Logic (no changes) ---
+              // --- Filtering Logic ---
               console.log("Filtering by volume..."); let filteredData = data; const volumesSet = new Set(selectedVolumes); filteredData = filteredData.filter((verse) => verse && typeof verse.volume_title === "string" && volumesSet.has(verse.volume_title)); console.log(`After volume filter: ${filteredData.length} entries.`);
               console.log("Filtering by search term:", originalSearchTerm, "Use regex:", useRegex); if (searchTerm || generatedRegexString) { if (useRegex && mainSearchRegex) { results = filteredData.filter((verse) => verse && typeof verse.scripture_text === "string" && mainSearchRegex.test(verse.scripture_text)); if (mainSearchRegex.global) mainSearchRegex.lastIndex = 0; } else if (!useRegex && searchTerm) { const finalSearchTerm = isCaseSensitive ? searchTerm : searchTerm.toLowerCase(); results = filteredData.filter((verse) => { const text = verse && typeof verse.scripture_text === "string" ? (isCaseSensitive ? verse.scripture_text : verse.scripture_text.toLowerCase()) : ""; return text.includes(finalSearchTerm); }); } else { results = filteredData; } } else { results = filteredData; } console.log(`After search term filter: ${results.length} entries.`);
               if (verseTitleRegex) { console.log("Filtering by verse title regex:", verseTitleRegex); results = results.filter((verse) => verse && typeof verse.verse_title === "string" && verseTitleRegex.test(verse.verse_title)); if (verseTitleRegex.global) verseTitleRegex.lastIndex = 0; console.log(`After verse title filter: ${results.length} entries.`); }
               // --- End Filtering Logic ---
 
-              if (shouldShuffle && results.length > 0) { /* ... (no changes - shuffle) ... */ console.log("Shuffling results..."); shuffleArray(results); }
+              if (shouldShuffle && results.length > 0) { /* ... (shuffle) ... */ console.log("Shuffling results..."); shuffleArray(results); }
 
-              // --- Search Status Text (no changes) ---
+              // --- Search Status Text ---
               let statusParts = []; if (originalSearchTerm) { statusParts.push(`Searching for "${originalSearchTerm}"`); if (useRegex) statusParts.push(`using ${wasAutoConverted ? "auto-converted " : ""}regex`); else statusParts.push(`as exact phrase`); statusParts.push(isCaseSensitive ? "(case-sensitive)" : "(case-insensitive)"); } else { statusParts.push("Showing all verses"); } if (verseTitleFilterTerm) statusParts.push(`filtering titles by regex "${verseTitleFilterTerm}"`); if (selectedVolumes.length < allAvailableVolumes.length) statusParts.push(`in selected volumes`); else statusParts.push(`in all volumes`); searchStatus.textContent = statusParts.join(", ") + "."; console.log("Search Status:", searchStatus.textContent);
               // --- End Search Status Text ---
 
@@ -688,8 +773,7 @@
               resultsHeadingText.textContent = `Scriptures (${resultCount > RESULT_RENDER_LIMIT ? '>' + RESULT_RENDER_LIMIT : resultCount})`;
               scripturesTabCount.textContent = resultCount > RESULT_RENDER_LIMIT ? `>${RESULT_RENDER_LIMIT}` : resultCount;
 
-              // Check result limit BEFORE attempting heavy processing
-              if (resultCount > RESULT_RENDER_LIMIT) {
+              if (resultCount > RESULT_RENDER_LIMIT) { /* ... (result limit exceeded) ... */
                   console.warn(`Search returned ${resultCount} results, exceeding the limit of ${RESULT_RENDER_LIMIT}.`);
                   resultsContainer.innerHTML = "";
                   noResultsMessage.innerHTML = `<p class="text-orange-700 font-semibold">Search returned ${resultCount.toLocaleString()} results, which is more than the display limit of ${RESULT_RENDER_LIMIT.toLocaleString()}.</p><p class="text-gray-600 mt-2">Please refine your search terms or filters to narrow down the results.</p>`;
@@ -699,34 +783,29 @@
                   if (!firstSearchPerformed) { firstSearchPerformed = true; console.log("First search performed flag set to true (results exceeded limit)."); console.log("Collapsing advanced options after first search (results exceeded limit)."); toggleAdvancedSearchArea(true); }
               } else if (resultCount > 0) {
                   console.log("Displaying results and calculating stats...");
-                  // Wrap potentially heavy operations in try...catch
                   try {
                       displayResults(results, originalSearchTerm, isCaseSensitive, shouldDisplayColumns);
-                      // Pass the *original* search term (before normalization) to stats
-                      calculateAndDisplayStatistics(results, resultCount, originalSearchTerm, useRegex, isCaseSensitive);
-                      // Render table and cloud for the default active tab (1-gram)
-                      switchNgramTab('1gram'); // This will call renderFrequencyTable and renderWordCloud
+                      // **MODIFIED: Pass originalSearchTerm and useRegex flag**
+                      calculateAndDisplayStatistics(results, resultCount, originalSearchTerm, useRegex);
+                      switchNgramTab('1gram');
                       statsTabButton.disabled = false;
                       console.log("Stats tab enabled.");
-                  } catch (statsError) {
+                  } catch (statsError) { /* ... (stats error handling) ... */
                       console.error("Error during statistics calculation or rendering:", statsError);
-                      statsTabButton.disabled = true; // Disable stats tab on error
-                      // Display error message within the stats tab area
-                      clearStatisticsDisplay(); // Clear partial stats
+                      statsTabButton.disabled = true;
+                      clearStatisticsDisplay();
                       const statsErrorDiv = document.getElementById("statsError");
                       statsErrorDiv.textContent = `An error occurred while generating statistics: ${statsError.message}. Try refining your search.`;
                       statsErrorDiv.classList.remove('hidden');
                   }
-                  // Set first search flag regardless of stats success/failure (if results were within limit)
                   if (!firstSearchPerformed) { firstSearchPerformed = true; console.log("First search performed flag set to true."); console.log("Collapsing advanced options after first search display."); toggleAdvancedSearchArea(true); }
-              } else {
-                  // Handle 0 results
+              } else { /* ... (handle 0 results) ... */
                   console.log("No matches found for criteria."); resultsContainer.className = "";
                   noResultsMessage.textContent = "No matches found for your criteria.";
                   noResultsMessage.classList.remove("hidden"); statsTabButton.disabled = true;
                   clearStatisticsDisplay(); console.log("Stats tab kept disabled.");
               }
-          } catch (error) { /* ... (no changes - general error handling) ... */
+          } catch (error) { /* ... (general error handling) ... */
               console.error("Error during search processing:", error); resultsContainer.className = "";
               scripturesContent.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-4xl mx-auto" role="alert"><strong class="font-bold">Search Error!</strong><span class="block sm:inline"> ${error.message}</span></div>`;
               resultsHeadingText.textContent = "Error"; scripturesTabCount.textContent = "!"; searchStatus.textContent = "Search failed due to an error.";
@@ -749,8 +828,7 @@
        }
 
       // --- N-gram Calculation ---
-      // OPTIMIZED for n=2
-      function calculateNGrams(results, n) {
+      function calculateNGrams(results, n) { /* ... (no changes) ... */
           console.log(`Calculating ${n}-grams...`);
           const ngramCounts = {};
           const ngramUniqueCounts = {};
@@ -765,7 +843,6 @@
 
               if (n === 2 && words.length >= 2) { // Optimized path for n=2
                   for (let i = 0; i < words.length - 1; i++) {
-                      // Avoid slice/join, directly combine words
                       const phrase = `${words[i]} ${words[i+1]}`;
                       ngramCounts[phrase] = (ngramCounts[phrase] || 0) + 1;
                       if (!phrasesInThisVerse.has(phrase)) {
@@ -773,7 +850,7 @@
                           phrasesInThisVerse.add(phrase);
                       }
                   }
-              } else if (n === 1) { // Explicit path for n=1 (though calculated elsewhere now)
+              } else if (n === 1) { // Explicit path for n=1 (recalculated in main stats func)
                  words.forEach(word => {
                     ngramCounts[word] = (ngramCounts[word] || 0) + 1;
                     if (!phrasesInThisVerse.has(word)) {
@@ -784,15 +861,13 @@
               }
           });
 
-           // Combine counts into the desired format
            const frequencyData = Object.keys(ngramCounts)
               .map(phrase => ({
-                  // Use 'word' for n=1, 'phrase' otherwise, consistent with table headers
                   [n === 1 ? 'word' : 'phrase']: phrase,
                   total: ngramCounts[phrase],
                   unique: ngramUniqueCounts[phrase] || 0,
               }))
-              .sort((a, b) => b.total - a.total); // Sort by total count desc
+              .sort((a, b) => b.total - a.total);
 
           console.log(`Found ${frequencyData.length} unique ${n}-grams.`);
           return frequencyData;
@@ -800,82 +875,236 @@
 
 
       // --- Statistics Calculation and Display ---
-      // Added originalSearchTerm, useRegex, isCaseSensitive parameters
-      function calculateAndDisplayStatistics(results, totalScripturesMatched, originalSearchTerm, useRegex, isCaseSensitive) {
+      // **MODIFIED: Added originalSearchTerm, useRegex parameters for word forms**
+      function calculateAndDisplayStatistics(results, totalScripturesMatched, originalSearchTerm, useRegex) {
          console.log("Calculating statistics for", totalScripturesMatched, "results.");
          statsError.classList.add('hidden'); statsError.textContent = '';
 
          if (!results || totalScripturesMatched === 0) { console.log("No results, clearing stats display."); clearStatisticsDisplay(); statsTabButton.disabled = true; return; }
 
-         const volumeCounts = {}; let totalWordsInResults = 0; const wordTotalCounts = {}; const wordUniqueCounts = {};
-         // Determine the normalized search term IF it was a simple search
-         let normalizedSingleSearchTerm = null;
-         if (!useRegex && originalSearchTerm && !originalSearchTerm.includes(' ')) {
-             normalizedSingleSearchTerm = normalizeWord(originalSearchTerm);
-             console.log("Normalized single search term for stats check:", normalizedSingleSearchTerm);
-         }
+         const volumeCounts = {};
+         let totalWordsInResults = 0;
+         const wordTotalCounts = {}; // Counts for individual normalized words
+         const wordUniqueCounts = {}; // Unique verses per individual normalized word
+         const wordFormsCounts = {}; // NEW: Counts for variations of the search term
 
-         // Calculate 1-grams and volume counts
+         // Determine if we should calculate word forms (non-regex, single word search)
+         const calculateWordForms = !useRegex && originalSearchTerm && !originalSearchTerm.includes(' ') && !originalSearchTerm.match(/\s+(AND|OR)\s+/i);
+         const normalizedSearchTermPrefix = calculateWordForms ? normalizeWord(originalSearchTerm) : null;
+         console.log("Calculate Word Forms:", calculateWordForms, "Prefix:", normalizedSearchTermPrefix);
+
+         // --- Calculate Volume Counts, Word Counts, and Word Forms ---
          results.forEach((verse) => {
              const volume = verse.volume_title || "Unknown Volume";
              volumeCounts[volume] = (volumeCounts[volume] || 0) + 1;
+
              const text = verse.scripture_text || "";
              const words = text.split(/\s+/);
-             const wordsInThisVerse = new Set();
-             let verseContainsSingleSearchTerm = false; // Flag for this verse
+             const uniqueWordsInThisVerse = new Set(); // Track unique normalized words per verse
 
              words.forEach((rawWord) => {
                  const word = normalizeWord(rawWord);
                  if (word && !STOP_WORDS.has(word)) {
                      totalWordsInResults++;
+                     // Increment total count for this specific word
                      wordTotalCounts[word] = (wordTotalCounts[word] || 0) + 1;
-                     if (!wordsInThisVerse.has(word)) {
+
+                     // Increment unique count for this specific word if first time in this verse
+                     if (!uniqueWordsInThisVerse.has(word)) {
                          wordUniqueCounts[word] = (wordUniqueCounts[word] || 0) + 1;
-                         wordsInThisVerse.add(word);
-                         // Check if this unique word matches the normalized search term
-                         if (word === normalizedSingleSearchTerm) {
-                             verseContainsSingleSearchTerm = true;
-                         }
+                         uniqueWordsInThisVerse.add(word);
+                     }
+
+                     // NEW: Check for word forms if applicable
+                     if (calculateWordForms && word.startsWith(normalizedSearchTermPrefix)) {
+                         wordFormsCounts[word] = (wordFormsCounts[word] || 0) + 1;
                      }
                  }
              });
-             // **DEBUG LOG:** Log if a verse from results doesn't contain the normalized single search term
-             if (normalizedSingleSearchTerm && !verseContainsSingleSearchTerm) {
-                 console.warn(`Verse "${verse.verse_title}" included in results but unique count missed normalized term "${normalizedSingleSearchTerm}". Text:`, text);
-             }
          });
          console.log("Total non-stop-words in matched scriptures:", totalWordsInResults);
+         console.log("Word Forms Counts:", wordFormsCounts);
 
-         // **Correction:** If it was a simple, single-word search, force the unique count for that word to match totalScripturesMatched
-         if (normalizedSingleSearchTerm && wordUniqueCounts[normalizedSingleSearchTerm] !== undefined) {
-             if (wordUniqueCounts[normalizedSingleSearchTerm] !== totalScripturesMatched) {
-                 console.warn(`Correcting unique count for "${normalizedSingleSearchTerm}". Was: ${wordUniqueCounts[normalizedSingleSearchTerm]}, Should be: ${totalScripturesMatched}`);
-                 wordUniqueCounts[normalizedSingleSearchTerm] = totalScripturesMatched;
-             }
-         }
-
-
-         // Process 1-gram data
+         // --- Process 1-gram data for the table ---
          currentFrequencyData[1] = Object.keys(wordTotalCounts).map((word) => {
              const total = wordTotalCounts[word];
-             const unique = wordUniqueCounts[word] || 0; // Use the (potentially corrected) unique count
+             const unique = wordUniqueCounts[word] || 0; // Use the unique count for this specific word
              const freqPerScripture = totalScripturesMatched > 0 ? total / totalScripturesMatched : 0;
              const freqPerWord = totalWordsInResults > 0 ? total / totalWordsInResults : 0;
              const coverage = totalScripturesMatched > 0 ? unique / totalScripturesMatched : 0;
              return { word: word, total: total, unique: unique, freqPerScripture: freqPerScripture, freqPerWord: freqPerWord, coverage: coverage };
-         }).sort((a, b) => b.total - a.total);
+         }).sort((a, b) => b.total - a.total); // Sort by total count initially
          console.log("1-gram frequency data calculated:", currentFrequencyData[1].length, "unique words found.");
 
-         // Calculate 2-grams using the (optimized) function
+         // --- Calculate 2-grams ---
          currentFrequencyData[2] = calculateNGrams(results, 2);
 
          // --- Populate Stats Tab ---
          statsTotalCount.textContent = totalScripturesMatched;
-         statsVolumeList.innerHTML = ""; const sortedVolumeNames = Object.keys(volumeCounts).sort((a, b) => { const indexA = HARDCODED_VOLUME_ORDER.indexOf(a); const indexB = HARDCODED_VOLUME_ORDER.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b); });
-         if (sortedVolumeNames.length > 0) { sortedVolumeNames.forEach((volume) => { const dt = document.createElement("dt"); dt.textContent = volume; const dd = document.createElement("dd"); dd.textContent = volumeCounts[volume]; statsVolumeList.appendChild(dt); statsVolumeList.appendChild(dd); }); } else { statsVolumeList.innerHTML = '<dt class="text-gray-500">No volume data available.</dt>'; }
+
+         // NEW: Prepare data for and render Volume Chart
+         const volumeChartData = HARDCODED_VOLUME_ORDER.map(volume => ({
+             volume: volume,
+             count: volumeCounts[volume] || 0
+         })).filter(d => d.count > 0); // Only include volumes with counts > 0
+         // Add any remaining volumes not in the hardcoded list
+         Object.keys(volumeCounts).forEach(volume => {
+             if (!HARDCODED_VOLUME_ORDER.includes(volume)) {
+                 volumeChartData.push({ volume: volume, count: volumeCounts[volume] });
+             }
+         });
+         renderVolumeChart(volumeChartData);
+
+         // NEW: Render Word Forms Breakdown
+         renderWordFormsBreakdown(wordFormsCounts, calculateWordForms);
+
          // Don't switch tab here, let performSearch handle calling switchNgramTab after success
          console.log("Statistics calculation complete.");
       }
+
+      // --- NEW: D3 Volume Chart Rendering ---
+      function renderVolumeChart(data) {
+          console.log("Rendering volume chart with data:", data);
+          statsVolumeChartContainer.innerHTML = ''; // Clear previous chart/placeholder
+
+          if (!data || data.length === 0) {
+              statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">No volume data to display.</p>';
+              return;
+          }
+
+          // --- D3 Chart Setup ---
+          const containerWidth = statsVolumeChartContainer.clientWidth;
+          if (!containerWidth) {
+              console.warn("Volume chart container has no width. Cannot render chart.");
+              statsVolumeChartContainer.innerHTML = '<p class="text-xs text-red-500 italic text-center pt-4">Error rendering chart (container width 0).</p>';
+              return;
+          }
+
+          const margin = { top: 10, right: 30, bottom: 20, left: 150 }; // Increased left margin for labels
+          const barHeight = 25;
+          const height = data.length * barHeight + margin.top + margin.bottom;
+          const width = containerWidth - margin.left - margin.right;
+
+          const svg = d3.select("#statsVolumeChartContainer")
+              .append("svg")
+              .attr("width", containerWidth)
+              .attr("height", height)
+              .append("g")
+              .attr("transform", `translate(${margin.left},${margin.top})`);
+
+          // --- Scales ---
+          const yScale = d3.scaleBand()
+              .domain(data.map(d => d.volume))
+              .range([0, height - margin.top - margin.bottom])
+              .padding(0.2); // Padding between bars
+
+          const xScale = d3.scaleLinear()
+              .domain([0, d3.max(data, d => d.count) || 1]) // Ensure domain starts at 0, handle max=0
+              .range([0, width]);
+
+          // --- Axes ---
+          const yAxis = d3.axisLeft(yScale).tickSizeOuter(0); // No outer ticks
+          svg.append("g")
+             .attr("class", "y axis")
+             .call(yAxis)
+             // Truncate long labels if necessary (optional)
+             .selectAll(".tick text")
+             .call(wrapAxisText, margin.left - 10); // Adjust wrap width
+
+
+          const xAxis = d3.axisBottom(xScale).ticks(Math.min(5, d3.max(data, d => d.count))).tickFormat(d3.format("d")); // Integer format, max 5 ticks
+          svg.append("g")
+             .attr("class", "x axis")
+             .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+             .call(xAxis);
+
+          // --- Bars ---
+          svg.selectAll(".bar")
+             .data(data)
+             .enter()
+             .append("rect")
+             .attr("class", "bar")
+             .attr("y", d => yScale(d.volume))
+             .attr("height", yScale.bandwidth())
+             .attr("x", 0)
+             .attr("width", 0) // Start width at 0 for transition
+             .transition() // Add transition
+             .duration(500) // Duration in ms
+             .attr("width", d => xScale(d.count));
+
+          // --- Bar Labels (Counts) ---
+          svg.selectAll(".bar-label")
+              .data(data)
+              .enter()
+              .append("text")
+              .attr("class", "bar-label")
+              .attr("y", d => yScale(d.volume) + yScale.bandwidth() / 2)
+              .attr("x", d => xScale(d.count) + 5) // Position label just after the bar
+              .text(d => d.count);
+
+          console.log("Volume chart rendered.");
+      }
+      // Helper function to wrap long axis labels (optional)
+      function wrapAxisText(text, width) {
+          text.each(function() {
+              const text = d3.select(this);
+              const words = text.text().split(/\s+/).reverse();
+              let word;
+              let line = [];
+              let lineNumber = 0;
+              const lineHeight = 1.1; // ems
+              const y = text.attr("y");
+              const dy = parseFloat(text.attr("dy") || 0);
+              let tspan = text.text(null).append("tspan").attr("x", -10).attr("y", y).attr("dy", dy + "em"); // Adjust x for left axis
+              while (word = words.pop()) {
+                  line.push(word);
+                  tspan.text(line.join(" "));
+                  if (tspan.node().getComputedTextLength() > width && line.length > 1) {
+                      line.pop();
+                      tspan.text(line.join(" "));
+                      line = [word];
+                      tspan = text.append("tspan").attr("x", -10).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word); // Adjust x
+                  }
+              }
+          });
+      }
+
+
+      // --- NEW: Word Forms Breakdown Rendering ---
+      function renderWordFormsBreakdown(formsData, wasSingleWordSearch) {
+          console.log("Rendering word forms breakdown:", formsData);
+          statsWordFormsList.innerHTML = ''; // Clear previous list
+
+          if (!wasSingleWordSearch) {
+              statsWordFormsPlaceholder.textContent = "Perform a non-regex, single-word search to see breakdown.";
+              statsWordFormsPlaceholder.classList.remove('hidden');
+              statsWordFormsList.classList.add('hidden');
+              return;
+          }
+
+          const formsArray = Object.entries(formsData)
+                                 .sort(([, countA], [, countB]) => countB - countA); // Sort by count desc
+
+          if (formsArray.length === 0) {
+              statsWordFormsPlaceholder.textContent = "No variations of the search term found in results.";
+              statsWordFormsPlaceholder.classList.remove('hidden');
+              statsWordFormsList.classList.add('hidden');
+          } else {
+              statsWordFormsPlaceholder.classList.add('hidden');
+              statsWordFormsList.classList.remove('hidden');
+              formsArray.forEach(([word, count]) => {
+                  const li = document.createElement('li');
+                  const wordSpan = document.createElement('span');
+                  wordSpan.textContent = word;
+                  const countSpan = document.createElement('span');
+                  countSpan.textContent = count;
+                  li.appendChild(wordSpan);
+                  li.appendChild(countSpan);
+                  statsWordFormsList.appendChild(li);
+              });
+          }
+      }
+
 
       // --- Word Cloud Rendering ---
        function renderWordCloud(ngramSize) { /* ... (no changes) ... */
@@ -912,8 +1141,19 @@
 
 
       // --- Clear Statistics Display ---
-      function clearStatisticsDisplay() { /* ... (no changes) ... */
-         console.log("Clearing statistics display."); statsTotalCount.textContent = "0"; statsVolumeList.innerHTML = '<dt class="text-gray-500">N/A</dt>';
+      // **MODIFIED: Clear new chart and breakdown areas**
+      function clearStatisticsDisplay() {
+         console.log("Clearing statistics display.");
+         statsTotalCount.textContent = "0";
+         // Clear Volume Chart
+         statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">Perform a search to generate volume chart.</p>';
+         // Clear Word Forms Breakdown
+         statsWordFormsList.innerHTML = '';
+         statsWordFormsPlaceholder.textContent = "Perform a non-regex, single-word search to see breakdown.";
+         statsWordFormsPlaceholder.classList.remove('hidden');
+         statsWordFormsList.classList.add('hidden');
+
+         // Clear tables and clouds
          statsWordTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Perform a search to see statistics.</td></tr>`;
          statsBigramTableBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 2-gram statistics.</td></tr>`;
          document.querySelectorAll('.wordCloudContainer').forEach(container => { container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${container.id.includes('1gram') ? 'word' : 'phrase'} cloud.</p>`; });

@@ -101,7 +101,8 @@
       .modal-box {
         background-color: white; padding: 2rem; border-radius: 0.5rem;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        max-width: 90%; width: 600px; max-height: 80vh; overflow-y: auto;
+        max-width: 90%; width: 600px; max-height: 80vh; /* Modal itself is scrollable */
+        overflow-y: auto;
         position: relative; transform: scale(0.95); transition: transform 0.3s ease;
       }
       .modal-overlay.active .modal-box { transform: scale(1); }
@@ -117,13 +118,41 @@
       .modal-content code { background-color: #f3f4f6; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.9em; }
       .modal-content dt { font-weight: 600; color: #1f2937; margin-top: 0.5rem;}
       .modal-content dd { margin-left: 1.5rem; margin-bottom: 0.5rem; font-size: 0.95em; }
+      /* Style for stop words list in modal */
+      .stop-words-list {
+          column-count: 3; /* Adjust number of columns as needed */
+          column-gap: 1rem;
+          list-style: none;
+          padding-left: 0;
+          font-size: 0.875rem; /* Smaller font size */
+          max-height: 300px; /* Limit height - adjust if needed */
+          overflow-y: auto; /* This makes the list scrollable if content exceeds max-height */
+          border: 1px solid #e5e7eb;
+          padding: 0.5rem;
+          border-radius: 0.375rem;
+          background-color: #f9fafb;
+      }
+      /* Custom scrollbar for stop words list (optional) */
+       .stop-words-list::-webkit-scrollbar { width: 6px; }
+       .stop-words-list::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+       .stop-words-list::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
+       .stop-words-list::-webkit-scrollbar-thumb:hover { background: #718096; }
+
+       .stop-words-list li {
+           margin-bottom: 0.25rem;
+           color: #4b5563; /* gray-600 */
+           /* Prevent columns from breaking words awkwardly */
+           -webkit-column-break-inside: avoid;
+           page-break-inside: avoid;
+           break-inside: avoid;
+       }
 
 
       /* Search status style */
       #searchStatus { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; }
       #searchStatus:empty { display: none; }
 
-      /* **NEW: Style for fallback data message** */
+      /* Style for fallback data message */
       #fallbackMessage {
         font-size: 0.875rem; /* text-sm */
         color: #ca8a04; /* yellow-600 */
@@ -412,7 +441,16 @@
 
             <div id="statsNgramSection">
                 <h4 class="text-md font-semibold mb-2 text-gray-600 border-t pt-4">N-gram Analysis (Top 100)</h4>
-                <p class="text-xs text-gray-500 mb-2">1-gram excludes common stop words. 2-gram and 3-gram include stop words. Click headers to sort table.</p>
+                <p class="text-xs text-gray-500 mb-2">Analyze common words or phrases. Click headers to sort table.</p>
+                <div class="flex items-center space-x-4 mb-2 text-sm">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="excludeStopWordsCheckbox" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-1" checked/>
+                        <label for="excludeStopWordsCheckbox" class="text-gray-700 cursor-pointer">Exclude Stop Words</label>
+                    </div>
+                    <button id="showStopWordsButton" class="text-blue-600 hover:text-blue-800 underline text-xs focus:outline-none">
+                        Show Stop Words
+                    </button>
+                </div>
                 <div id="ngramTabContainer" class="ngram-tab-container">
                     <button class="ngram-tab-button active" data-ngram-tab="1gram">1-gram (Words)</button>
                     <button class="ngram-tab-button" data-ngram-tab="2gram">2-gram (Pairs)</button>
@@ -528,7 +566,7 @@
 
           <h4>N-gram Analysis Section</h4>
           <p>This section shows the most common words (1-gram), pairs (2-gram), or triplets (3-gram) found in the matched scriptures. Each tab provides a word/phrase cloud visualization and a frequency table.</p>
-          <p><strong>Important:</strong> 1-gram analysis excludes common stop words (like "the", "a", "is"). 2-gram and 3-gram analysis <strong>includes</strong> stop words to preserve phrase context.</p>
+          <p>Use the "Exclude Stop Words" checkbox to control whether common words (like "the", "a", "is") are included in the analysis. Excluding them often highlights more meaningful terms, especially for 1-grams. Including them preserves the exact phrasing for 2-grams and 3-grams.</p>
 
           <h5>Word/Phrase Cloud</h5>
            <p>A visual representation of the most frequent items (words, pairs, or triplets) for the selected N-gram size. Larger items appear more frequently. Clicking an item will search for it (only works well for single words).</p>
@@ -549,12 +587,25 @@
             <dd>Average number of times this specific word appears per matched scripture. Calculated as: <code>Word's Total Count / Total Unique Scriptures Matched</code>.</dd>
 
             <dt>Freq/Word (1-gram only)</dt>
-            <dd>The proportion of this specific word relative to all non-stop-words counted across all matched scriptures. Calculated as: <code>Word's Total Count / Total Non-Stop-Words in Matched Scriptures</code>.</dd>
+            <dd>The proportion of this specific word relative to all words counted across all matched scriptures (respecting the "Exclude Stop Words" setting). Calculated as: <code>Word's Total Count / Total Words Counted</code>.</dd>
 
             <dt>Coverage (1-gram only)</dt>
             <dd>The percentage of matched scriptures that contain this specific word at least once. Calculated as: <code>Word's Unique Count / Total Unique Scriptures Matched</code>.</dd>
           </dl>
 
+        </div>
+      </div>
+    </div>
+
+    <div id="stopWordsModalOverlay" class="modal-overlay">
+      <div class="modal-box">
+        <button id="stopWordsModalCloseButton" class="modal-close-button">&times;</button>
+        <div class="modal-content">
+          <h3>Stop Words List</h3>
+          <p>These common words are excluded from N-gram analysis when the "Exclude Stop Words" checkbox is checked. This list helps focus the analysis on more significant terms.</p>
+          <ul id="stopWordsListDisplay" class="stop-words-list mt-4">
+             <li>Loading...</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -568,7 +619,7 @@
       const RESULT_RENDER_LIMIT = 2000; // Max results to render
 
       // --- Global Variables ---
-      const scriptureCache = { lds: null };
+      const scriptureCache = { lds: null, currentResults: [] };
       let allAvailableVolumes = [];
       let booksMap = new Map();
       let volumeCheckboxElements = [];
@@ -597,7 +648,7 @@
       const noResultsMessage = document.getElementById("noResults");
       const resultsHeadingText = document.getElementById("resultsHeadingText");
       const searchStatus = document.getElementById("searchStatus");
-      const fallbackMessage = document.getElementById("fallbackMessage"); // **NEW: Fallback message ref**
+      const fallbackMessage = document.getElementById("fallbackMessage");
       const howToSearchButton = document.getElementById("howToSearchButton");
       const searchHelpModalOverlay = document.getElementById("searchHelpModalOverlay");
       const searchHelpModalCloseButton = document.getElementById("searchHelpModalCloseButton");
@@ -623,6 +674,11 @@
       const ngramTabButtons = ngramTabContainer.querySelectorAll(".ngram-tab-button");
       const ngramTabContentContainer = document.getElementById("ngramTabContentContainer");
       const ngramTabContents = ngramTabContentContainer.querySelectorAll(".ngram-tab-content");
+      const excludeStopWordsCheckbox = document.getElementById("excludeStopWordsCheckbox");
+      const showStopWordsButton = document.getElementById("showStopWordsButton");
+      const stopWordsModalOverlay = document.getElementById("stopWordsModalOverlay");
+      const stopWordsModalCloseButton = document.getElementById("stopWordsModalCloseButton");
+      const stopWordsListDisplay = document.getElementById("stopWordsListDisplay");
       const statsWordTable = document.getElementById("statsWordTable");
       const statsWordTableBody = document.getElementById("statsWordTableBody");
       const statsWordTableHeaders = statsWordTable.querySelectorAll("thead th[data-sort]");
@@ -637,7 +693,7 @@
       const statsHelpModalCloseButton = document.getElementById("statsHelpModalCloseButton");
       const statsError = document.getElementById("statsError");
 
-      // --- **NEW: Dummy Scripture Data** ---
+      // --- Dummy Scripture Data ---
       const DUMMY_SCRIPTURE_DATA = [
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 1, "verse_title": "Genesis 1:1", "verse_short_title": "Gen. 1:1", "scripture_text": "In the beginning God created the heaven and the earth." },
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 2, "verse_title": "Genesis 1:2", "verse_short_title": "Gen. 1:2", "scripture_text": "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters." },
@@ -645,7 +701,6 @@
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 4, "verse_title": "Genesis 1:4", "verse_short_title": "Gen. 1:4", "scripture_text": "And God saw the light, that it was good: and God divided the light from the darkness." },
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 5, "verse_title": "Genesis 1:5", "verse_short_title": "Gen. 1:5", "scripture_text": "And God called the light Day, and the darkness he called Night. And the evening and the morning were the first day." },
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 6, "verse_title": "Genesis 1:6", "verse_short_title": "Gen. 1:6", "scripture_text": "And God said, Let there be a firmament in the midst of the waters, and let it divide the waters from the waters." },
-          // Add more dummy data here if needed
           { "volume_title": "New Testament", "book_title": "John", "book_short_title": "John", "chapter_number": 3, "verse_number": 16, "verse_title": "John 3:16", "verse_short_title": "John 3:16", "scripture_text": "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life." }
       ];
 
@@ -665,8 +720,7 @@
 
 
       // --- Data Fetching and Initialization ---
-      // **MODIFIED: Added fallback logic**
-      async function fetchScriptureData() {
+      async function fetchScriptureData() { /* ... (no changes) ... */
           if (scriptureCache.lds) {
               console.log("Using cached scripture data.");
               return scriptureCache.lds;
@@ -752,7 +806,6 @@
               console.log(`Finished fetchScriptureData attempt. ${usingFallback ? '(Using Fallback Data)' : ''}`);
           }
       }
-
       function populateVolumeCheckboxes() { /* ... (no changes) ... */
           volumeCheckboxesContainer.innerHTML = ""; volumeCheckboxElements = [];
           allAvailableVolumes.forEach((volume) => {
@@ -784,10 +837,15 @@
       explainStatsButton.addEventListener("click", () => openModal(statsHelpModalOverlay));
       statsHelpModalCloseButton.addEventListener("click", () => closeModal(statsHelpModalOverlay));
       statsHelpModalOverlay.addEventListener("click", (event) => { if (event.target === statsHelpModalOverlay) closeModal(statsHelpModalOverlay); });
-      document.addEventListener("keydown", (event) => { /* ... (no changes) ... */
+      showStopWordsButton.addEventListener("click", () => openModal(stopWordsModalOverlay));
+      stopWordsModalCloseButton.addEventListener("click", () => closeModal(stopWordsModalOverlay));
+      stopWordsModalOverlay.addEventListener("click", (event) => { if (event.target === stopWordsModalOverlay) closeModal(stopWordsModalOverlay); });
+
+      document.addEventListener("keydown", (event) => {
           if (event.key === "Escape") {
               if (searchHelpModalOverlay.classList.contains("active")) closeModal(searchHelpModalOverlay);
               if (statsHelpModalOverlay.classList.contains("active")) closeModal(statsHelpModalOverlay);
+              if (stopWordsModalOverlay.classList.contains("active")) closeModal(stopWordsModalOverlay);
           }
       });
 
@@ -879,6 +937,32 @@
           button.addEventListener('click', () => switchNgramTab(button.dataset.ngramTab));
       });
 
+      // --- Stop Words Checkbox Handler ---
+      excludeStopWordsCheckbox.addEventListener('change', () => {
+          console.log("Exclude Stop Words checkbox changed:", excludeStopWordsCheckbox.checked);
+          // Only recalculate if statistics are currently enabled (i.e., a search has been performed)
+          if (!statsTabButton.disabled && scriptureCache.currentResults.length > 0) {
+              console.log("Recalculating statistics due to stop word toggle change...");
+              try {
+                  // Re-calculate stats using the stored results and the new checkbox state
+                  calculateAndDisplayStatistics(
+                      scriptureCache.currentResults,
+                      scriptureCache.currentResults.length,
+                      searchInput.value.trim(), // Pass original search term again
+                      regexSearchCheckbox.checked // Pass regex flag again
+                  );
+                  // Re-render the currently selected N-gram tab view
+                  switchNgramTab(`${currentNgramSize}gram`);
+              } catch (error) {
+                  console.error("Error recalculating statistics after stop word toggle:", error);
+                  statsError.textContent = `Error updating statistics: ${error.message}`;
+                  statsError.classList.remove('hidden');
+              }
+          } else {
+              console.log("Stop word checkbox changed, but no results to recalculate stats for.");
+          }
+      });
+
 
       // --- Search Logic ---
       function getSelectedVolumes() { /* ... (no changes) ... */ return volumeCheckboxElements.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value); }
@@ -890,8 +974,8 @@
           searchInputError.textContent = ""; verseTitleFilterError.textContent = ""; searchStatus.textContent = "";
           resultsContainer.innerHTML = ""; noResultsMessage.classList.add("hidden"); clearStatisticsDisplay(); statsTabButton.disabled = true;
           statsError.classList.add('hidden'); statsError.textContent = '';
-          // **MODIFIED: Clear fallback message before search**
           fallbackMessage.textContent = "";
+          scriptureCache.currentResults = []; // Clear stored results
           switchTab("scriptures"); // Always switch back to scriptures tab on new search
 
           let searchTerm = searchInput.value.trim(); const originalSearchTerm = searchTerm; // Keep original for stats
@@ -911,19 +995,8 @@
           loadingIndicator.classList.remove("hidden"); resultsContainer.className = shouldDisplayColumns ? "results-flex-container" : "results-grid-container";
           let results = [];
           try {
-              // **MODIFIED: fetchScriptureData now handles fallback internally**
               const data = await fetchScriptureData();
-              if (!Array.isArray(data) || data.length === 0) {
-                  console.error("performSearch cannot proceed: Invalid or empty data received from fetchScriptureData.");
-                  if (!scripturesContent.querySelector(".bg-red-100")) { // Avoid double error messages
-                      resultsHeadingText.textContent = "Results";
-                      scripturesTabCount.textContent = "0";
-                      noResultsMessage.textContent = "No scripture data is available to search.";
-                      noResultsMessage.classList.remove("hidden");
-                  }
-                  loadingIndicator.classList.add("hidden");
-                  return;
-              }
+              if (!Array.isArray(data) || data.length === 0) { /* ... (data validation) ... */ console.error("performSearch cannot proceed: Invalid or empty data received from fetchScriptureData."); if (!scripturesContent.querySelector(".bg-red-100")) { resultsHeadingText.textContent = "Results"; scripturesTabCount.textContent = "0"; noResultsMessage.textContent = "No scripture data is available to search."; noResultsMessage.classList.remove("hidden"); } loadingIndicator.classList.add("hidden"); return; }
               console.log(`Processing ${data.length} scripture entries (real or fallback).`);
 
               // --- Filtering Logic ---
@@ -931,6 +1004,9 @@
               console.log("Filtering by search term:", originalSearchTerm, "Use regex:", useRegex); if (searchTerm || generatedRegexString) { if (useRegex && mainSearchRegex) { results = filteredData.filter((verse) => verse && typeof verse.scripture_text === "string" && mainSearchRegex.test(verse.scripture_text)); if (mainSearchRegex.global) mainSearchRegex.lastIndex = 0; } else if (!useRegex && searchTerm) { const finalSearchTerm = isCaseSensitive ? searchTerm : searchTerm.toLowerCase(); results = filteredData.filter((verse) => { const text = verse && typeof verse.scripture_text === "string" ? (isCaseSensitive ? verse.scripture_text : verse.scripture_text.toLowerCase()) : ""; return text.includes(finalSearchTerm); }); } else { results = filteredData; } } else { results = filteredData; } console.log(`After search term filter: ${results.length} entries.`);
               if (verseTitleRegex) { console.log("Filtering by verse title regex:", verseTitleRegex); results = results.filter((verse) => verse && typeof verse.verse_title === "string" && verseTitleRegex.test(verse.verse_title)); if (verseTitleRegex.global) verseTitleRegex.lastIndex = 0; console.log(`After verse title filter: ${results.length} entries.`); }
               // --- End Filtering Logic ---
+
+              // **MODIFIED: Store results for potential recalculation**
+              scriptureCache.currentResults = results;
 
               if (shouldShuffle && results.length > 0) { /* ... (shuffle) ... */ console.log("Shuffling results..."); shuffleArray(results); }
 
@@ -949,6 +1025,7 @@
                   noResultsMessage.classList.remove("hidden");
                   statsTabButton.disabled = true;
                   clearStatisticsDisplay();
+                  scriptureCache.currentResults = []; // Clear stored results on exceed limit
                   if (!firstSearchPerformed) { firstSearchPerformed = true; console.log("First search performed flag set to true (results exceeded limit)."); console.log("Collapsing advanced options after first search (results exceeded limit)."); toggleAdvancedSearchArea(true); }
               } else if (resultCount > 0) {
                   console.log("Displaying results and calculating stats...");
@@ -961,6 +1038,7 @@
                       console.error("Error during statistics calculation or rendering:", statsError);
                       statsTabButton.disabled = true;
                       clearStatisticsDisplay();
+                      scriptureCache.currentResults = []; // Clear stored results on error
                       const statsErrorDiv = document.getElementById("statsError");
                       statsErrorDiv.textContent = `An error occurred while generating statistics: ${statsError.message}. Try refining your search.`;
                       statsErrorDiv.classList.remove('hidden');
@@ -971,12 +1049,14 @@
                   noResultsMessage.textContent = "No matches found for your criteria.";
                   noResultsMessage.classList.remove("hidden"); statsTabButton.disabled = true;
                   clearStatisticsDisplay(); console.log("Stats tab kept disabled.");
+                  scriptureCache.currentResults = []; // Clear stored results on no match
               }
           } catch (error) { /* ... (general error handling) ... */
               console.error("Error during search processing:", error); resultsContainer.className = "";
               scripturesContent.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-4xl mx-auto" role="alert"><strong class="font-bold">Search Error!</strong><span class="block sm:inline"> ${error.message}</span></div>`;
               resultsHeadingText.textContent = "Error"; scripturesTabCount.textContent = "!"; searchStatus.textContent = "Search failed due to an error.";
               noResultsMessage.classList.add("hidden"); statsTabButton.disabled = true; clearStatisticsDisplay();
+              scriptureCache.currentResults = []; // Clear stored results on error
           } finally { loadingIndicator.classList.add("hidden"); console.log("--- Search Finished ---"); }
       }
 
@@ -995,8 +1075,8 @@
        }
 
       // --- N-gram Calculation ---
-      function calculateNGrams(results, n) { /* ... (no changes) ... */
-          console.log(`Calculating ${n}-grams... (Stop words filter: ${n === 1})`);
+      function calculateNGrams(results, n, excludeStopWords) { /* ... (no changes) ... */
+          console.log(`Calculating ${n}-grams... (Exclude Stop Words: ${excludeStopWords})`);
           const ngramCounts = {};
           const ngramUniqueCounts = {};
 
@@ -1005,24 +1085,23 @@
               // Tokenize and normalize words
               const normalizedWords = text.split(/\s+/)
                                           .map(normalizeWord)
-                                          .filter(word => word); // Remove empty strings after normalization
+                                          .filter(word => word); // Remove empty strings
 
-              // Filter stop words ONLY if n === 1
-              const wordsToUse = (n === 1)
+              // Filter stop words based on the flag
+              const wordsToUse = excludeStopWords
                   ? normalizedWords.filter(word => !STOP_WORDS.has(word))
                   : normalizedWords;
 
-              const phrasesInThisVerse = new Set();
+              const itemsInThisVerse = new Set(); // Can be words or phrases
 
               if (wordsToUse.length >= n) {
                   for (let i = 0; i <= wordsToUse.length - n; i++) {
-                      const phrase = wordsToUse.slice(i, i + n).join(" ");
-                      // Ensure phrase is not empty (can happen if normalization results in empty strings)
-                      if (phrase.trim()) {
-                          ngramCounts[phrase] = (ngramCounts[phrase] || 0) + 1;
-                          if (!phrasesInThisVerse.has(phrase)) {
-                              ngramUniqueCounts[phrase] = (ngramUniqueCounts[phrase] || 0) + 1;
-                              phrasesInThisVerse.add(phrase);
+                      const item = wordsToUse.slice(i, i + n).join(" ");
+                      if (item.trim()) { // Ensure item is not empty
+                          ngramCounts[item] = (ngramCounts[item] || 0) + 1;
+                          if (!itemsInThisVerse.has(item)) {
+                              ngramUniqueCounts[item] = (ngramUniqueCounts[item] || 0) + 1;
+                              itemsInThisVerse.add(item);
                           }
                       }
                   }
@@ -1030,10 +1109,10 @@
           });
 
            const frequencyData = Object.keys(ngramCounts)
-              .map(phrase => ({
-                  phrase: phrase, // Always use 'phrase' as key for n > 1
-                  total: ngramCounts[phrase],
-                  unique: ngramUniqueCounts[phrase] || 0,
+              .map(item => ({
+                  [n === 1 ? 'word' : 'phrase']: item,
+                  total: ngramCounts[item],
+                  unique: ngramUniqueCounts[item] || 0,
               }))
               .sort((a, b) => b.total - a.total);
 
@@ -1051,59 +1130,65 @@
 
          if (!results || totalScripturesMatched === 0) { console.log("No results, clearing stats display."); clearStatisticsDisplay(); statsTabButton.disabled = true; return; }
 
+         const shouldExcludeStopWords = excludeStopWordsCheckbox.checked;
+         console.log("Stop word exclusion setting:", shouldExcludeStopWords);
+
          const volumeCounts = {};
-         let totalWordsInResults = 0; // Total non-stop words (for 1-gram % calculation)
-         const wordTotalCounts = {}; // Counts for individual normalized words (for 1-gram table)
-         const wordUniqueCounts = {}; // Unique verses per individual normalized word (for 1-gram table)
-         const wordFormsCounts = {}; // Counts for variations of the search term
+         let totalWordsCounted = 0; // Total words counted (respecting stop words setting)
+         const wordTotalCounts = {}; // Counts for individual words (respecting stop words setting)
+         const wordUniqueCounts = {}; // Unique verses per individual word (respecting stop words setting)
+         const wordFormsCounts = {}; // Counts for variations of the search term (always includes stop words if applicable)
 
          const calculateWordForms = !useRegex && originalSearchTerm && !originalSearchTerm.includes(' ') && !originalSearchTerm.match(/\s+(AND|OR)\s+/i);
          const normalizedSearchTermPrefix = calculateWordForms ? normalizeWord(originalSearchTerm) : null;
          console.log("Calculate Word Forms:", calculateWordForms, "Prefix:", normalizedSearchTermPrefix);
 
-         // --- Calculate Volume Counts, Word Counts (1-gram specific), and Word Forms ---
+         // --- Calculate Volume Counts, Word Counts (respecting stop words), and Word Forms ---
          results.forEach((verse) => {
              const volume = verse.volume_title || "Unknown Volume";
              volumeCounts[volume] = (volumeCounts[volume] || 0) + 1;
 
              const text = verse.scripture_text || "";
              const words = text.split(/\s+/);
-             const uniqueWordsInThisVerse = new Set(); // Track unique normalized words per verse (for 1-gram unique count)
+             const uniqueWordsInThisVerse = new Set();
 
              words.forEach((rawWord) => {
                  const word = normalizeWord(rawWord);
-                 // Calculate 1-gram specific stats (filter stop words)
-                 if (word && !STOP_WORDS.has(word)) {
-                     totalWordsInResults++;
-                     wordTotalCounts[word] = (wordTotalCounts[word] || 0) + 1;
-                     if (!uniqueWordsInThisVerse.has(word)) {
-                         wordUniqueCounts[word] = (wordUniqueCounts[word] || 0) + 1;
-                         uniqueWordsInThisVerse.add(word);
+                 if (word) { // Process only non-empty normalized words
+                     const countThisWord = !shouldExcludeStopWords || !STOP_WORDS.has(word);
+
+                     if (countThisWord) {
+                         totalWordsCounted++;
+                         wordTotalCounts[word] = (wordTotalCounts[word] || 0) + 1;
+                         if (!uniqueWordsInThisVerse.has(word)) {
+                             wordUniqueCounts[word] = (wordUniqueCounts[word] || 0) + 1;
+                             uniqueWordsInThisVerse.add(word);
+                         }
                      }
-                 }
-                 // Check for word forms (uses normalized word, might include stop words if the search term is one)
-                 if (calculateWordForms && word && word.startsWith(normalizedSearchTermPrefix)) {
-                     wordFormsCounts[word] = (wordFormsCounts[word] || 0) + 1;
+
+                     if (calculateWordForms && word.startsWith(normalizedSearchTermPrefix)) {
+                         wordFormsCounts[word] = (wordFormsCounts[word] || 0) + 1;
+                     }
                  }
              });
          });
-         console.log("Total non-stop-words in matched scriptures (for 1-gram %):", totalWordsInResults);
+         console.log("Total words counted (respecting stop words):", totalWordsCounted);
          console.log("Word Forms Counts:", wordFormsCounts);
 
-         // --- Process 1-gram data for the table ---
+         // --- Process 1-gram data for the table (based on potentially filtered counts) ---
          currentFrequencyData[1] = Object.keys(wordTotalCounts).map((word) => {
              const total = wordTotalCounts[word];
              const unique = wordUniqueCounts[word] || 0;
              const freqPerScripture = totalScripturesMatched > 0 ? total / totalScripturesMatched : 0;
-             const freqPerWord = totalWordsInResults > 0 ? total / totalWordsInResults : 0;
+             const freqPerWord = totalWordsCounted > 0 ? total / totalWordsCounted : 0; // Use totalWordsCounted
              const coverage = totalScripturesMatched > 0 ? unique / totalScripturesMatched : 0;
              return { word: word, total: total, unique: unique, freqPerScripture: freqPerScripture, freqPerWord: freqPerWord, coverage: coverage };
          }).sort((a, b) => b.total - a.total);
          console.log("1-gram frequency data calculated:", currentFrequencyData[1].length, "unique words found.");
 
-         // --- Calculate 2-grams and 3-grams (no stop word filtering here) ---
-         currentFrequencyData[2] = calculateNGrams(results, 2);
-         currentFrequencyData[3] = calculateNGrams(results, 3);
+         // --- Calculate 2-grams and 3-grams (pass stop word setting) ---
+         currentFrequencyData[2] = calculateNGrams(results, 2, shouldExcludeStopWords);
+         currentFrequencyData[3] = calculateNGrams(results, 3, shouldExcludeStopWords);
 
          // --- Populate Stats Summary and Word Forms ---
          statsTotalCount.textContent = totalScripturesMatched;
@@ -1503,9 +1588,20 @@
            const copyButton = event.target.closest('.copy-button'); if (copyButton && (resultsContainer.contains(copyButton))) { const textToCopy = unescape(copyButton.dataset.copy); try { await navigator.clipboard.writeText(textToCopy); console.log("Text copied to clipboard:", textToCopy); copyButton.textContent = "Copied!"; copyButton.classList.add("copied"); setTimeout(() => { copyButton.textContent = "Copy"; copyButton.classList.remove("copied"); }, 1500); } catch (err) { console.error("Failed to copy text: ", err); copyButton.textContent = "Error"; setTimeout(() => { copyButton.textContent = "Copy"; }, 1500); } }
        });
 
+      // --- Populate Stop Words Modal ---
+      function populateStopWordsModal() {
+          stopWordsListDisplay.innerHTML = ''; // Clear previous list
+          const sortedStopWords = Array.from(STOP_WORDS).sort();
+          sortedStopWords.forEach(word => {
+              const li = document.createElement('li');
+              li.textContent = word;
+              stopWordsListDisplay.appendChild(li);
+          });
+      }
+
 
       // --- Initial Setup ---
-      document.addEventListener("DOMContentLoaded", function () { /* ... (no changes) ... */
+      document.addEventListener("DOMContentLoaded", function () {
           console.log("DOM Loaded. Setting up event listeners.");
           searchButton.addEventListener("click", performSearch);
           searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") performSearch(); });
@@ -1517,6 +1613,7 @@
           toggleAdvancedSearchButton.style.display = 'inline-flex';
           toggleAdvancedSearchLink.style.display = 'none';
           clearStatisticsDisplay(); // Clear display initially and set 1-gram tab as default active
+          populateStopWordsModal(); // Populate stop words list on load
       });
     </script>
   </body>

@@ -163,15 +163,16 @@
        #statsVolumeBreakdown dd { margin-left: 0.5rem; color: #6b7280; margin-bottom: 0.25rem; font-size: 0.9em;}
 
       /* Word Cloud Style */
-      #wordCloudContainer {
+      .wordCloudContainer { /* Use class instead of ID */
           width: 100%;
           min-height: 250px; /* Ensure space for the cloud */
           border: 1px solid #e5e7eb; /* Optional border */
           border-radius: 0.375rem;
           position: relative; /* For potential loading indicators */
           background-color: #f9fafb; /* Light background */
+          margin-top: 1rem; /* Add space above cloud */
       }
-       #wordCloudContainer svg {
+       .wordCloudContainer svg { /* Select SVG within the container */
            display: block; /* Prevent extra space below SVG */
            margin: auto; /* Center the cloud if container is wider */
        }
@@ -297,22 +298,25 @@
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-md font-semibold mb-2 text-gray-600">Word Cloud (Top Words)</h4>
-                    <div id="wordCloudContainer">
-                        <p id="wordCloudStatus" class="text-center text-gray-500 p-4">Perform a search to generate word cloud.</p>
-                    </div>
-                </div>
+                     </div>
             </div>
 
             <div id="statsNgramSection">
-                <h4 class="text-md font-semibold mb-2 text-gray-600 border-t pt-4">N-gram Frequency (Top 100)</h4>
-                <p class="text-xs text-gray-500 mb-2">Excludes common stop words. Click headers to sort.</p>
+                <h4 class="text-md font-semibold mb-2 text-gray-600 border-t pt-4">N-gram Analysis (Top 100)</h4>
+                <p class="text-xs text-gray-500 mb-2">Excludes common stop words. Click headers to sort table.</p>
                 <div id="ngramTabContainer" class="ngram-tab-container">
                     <button class="ngram-tab-button active" data-ngram-tab="1gram">1-gram (Words)</button>
                     <button class="ngram-tab-button" data-ngram-tab="2gram">2-gram (Pairs)</button>
                     </div>
                 <div id="ngramTabContentContainer">
                     <div id="1gramContent" class="ngram-tab-content active">
+                        <div class="mb-4">
+                             <h5 class="text-sm font-semibold mb-1 text-gray-600">Word Cloud</h5>
+                             <div id="wordCloudContainer1gram" class="wordCloudContainer">
+                                 <p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate word cloud.</p>
+                             </div>
+                        </div>
+                        <h5 class="text-sm font-semibold mb-1 text-gray-600">Frequency Table</h5>
                         <div class="overflow-x-auto">
                             <table id="statsWordTable" class="stats-table">
                                 <thead>
@@ -332,6 +336,13 @@
                         </div>
                     </div>
                     <div id="2gramContent" class="ngram-tab-content">
+                         <div class="mb-4">
+                             <h5 class="text-sm font-semibold mb-1 text-gray-600">Phrase Cloud</h5>
+                              <div id="wordCloudContainer2gram" class="wordCloudContainer">
+                                 <p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate phrase cloud.</p>
+                             </div>
+                         </div>
+                         <h5 class="text-sm font-semibold mb-1 text-gray-600">Frequency Table</h5>
                          <div class="overflow-x-auto">
                             <table id="statsBigramTable" class="stats-table">
                                 <thead>
@@ -374,11 +385,16 @@
                <dd>Shows how many of the matched scriptures belong to each volume (e.g., Book of Mormon: 257).</dd>
            </dl>
 
-          <h4>N-gram Frequency Tables (1-gram, 2-gram, etc.)</h4>
-          <p>These tables show the most common words (1-gram) or phrases (2-gram, etc.) found in the matched scriptures, excluding common stop words like "and", "the", "it".</p>
+          <h4>N-gram Analysis Section</h4>
+          <p>This section shows the most common words (1-gram) or phrases (2-gram) found in the matched scriptures, excluding common stop words. Each tab provides a word/phrase cloud visualization and a frequency table.</p>
+
+          <h5>Word/Phrase Cloud</h5>
+           <p>A visual representation of the most frequent items (words or phrases) for the selected N-gram size. Larger items appear more frequently. Clicking an item will search for it.</p>
+
+          <h5>Frequency Tables</h5>
           <dl>
             <dt>Word / Phrase</dt>
-            <dd>The specific word (1-gram) or sequence of words (2-gram, etc.) being analyzed.</dd>
+            <dd>The specific word (1-gram) or sequence of words (2-gram) being analyzed.</dd>
 
             <dt>Total Count</dt>
             <dd>The absolute total number of times this word/phrase appears across ALL matched scriptures. A word/phrase can appear multiple times in a single scripture.</dd>
@@ -396,8 +412,6 @@
             <dd>The percentage of matched scriptures that contain this specific word at least once. Calculated as: <code>Unique Count / Total Unique Scriptures Matched</code>.</dd>
           </dl>
 
-           <h4>Word Cloud</h4>
-           <p>A visual representation of the most frequent single words (1-grams) from the matched scriptures. Larger words appear more frequently.</p>
         </div>
       </div>
     </div>
@@ -420,6 +434,7 @@
       let currentSortDirection = "desc";
       let firstSearchPerformed = false;
       let currentNgramSize = 1;
+      let wordCloudLayout = null; // Store the layout object
 
       // --- DOM Element References ---
       // (Existing refs remain the same)
@@ -457,9 +472,7 @@
       const statsDisplayArea = document.getElementById("statsDisplayArea");
       const statsTotalCount = document.getElementById("statsTotalCount");
       const statsVolumeList = document.getElementById("statsVolumeList");
-      // Word Cloud Elements
-      const wordCloudContainer = document.getElementById("wordCloudContainer");
-      const wordCloudStatus = document.getElementById("wordCloudStatus");
+      // Word Cloud Elements (Now selected dynamically)
       // N-gram Tab Elements
       const ngramTabContainer = document.getElementById("ngramTabContainer");
       const ngramTabButtons = ngramTabContainer.querySelectorAll(".ngram-tab-button");
@@ -596,11 +609,21 @@
           ngramTabContents.forEach(content => content.classList.remove('active'));
           ngramTabButtons.forEach(button => button.classList.remove('active'));
 
-          document.getElementById(targetTab + 'Content').classList.add('active');
-          ngramTabContainer.querySelector(`[data-ngram-tab="${targetTab}"]`).classList.add('active');
+          const activeContent = document.getElementById(targetTab + 'Content');
+          const activeButton = ngramTabContainer.querySelector(`[data-ngram-tab="${targetTab}"]`);
 
-          // Re-render the appropriate table if needed, or ensure data is loaded
-          renderFrequencyTable(); // Render the table for the now active n-gram size
+          if(activeContent) activeContent.classList.add('active');
+          if(activeButton) activeButton.classList.add('active');
+
+          // Render the table and word cloud for the now active n-gram size
+          renderFrequencyTable();
+          // Only render word cloud if the container exists for this tab
+          const cloudContainerId = `wordCloudContainer${currentNgramSize}gram`;
+          if (document.getElementById(cloudContainerId)) {
+             renderWordCloud(currentNgramSize);
+          } else {
+             console.log(`No word cloud container found for ${currentNgramSize}-gram.`);
+          }
       }
       ngramTabButtons.forEach(button => {
           button.addEventListener('click', () => switchNgramTab(button.dataset.ngramTab));
@@ -670,8 +693,8 @@
                   try {
                       displayResults(results, originalSearchTerm, isCaseSensitive, shouldDisplayColumns);
                       calculateAndDisplayStatistics(results, resultCount);
-                      renderFrequencyTable();
-                      renderWordCloud();
+                      // Render table and cloud for the default active tab (1-gram)
+                      switchNgramTab('1gram'); // This will call renderFrequencyTable and renderWordCloud
                       statsTabButton.disabled = false;
                       console.log("Stats tab enabled.");
                   } catch (statsError) {
@@ -740,8 +763,6 @@
                       }
                   }
               } else if (n === 1) { // Explicit path for n=1 (though calculated elsewhere now)
-                 // This path isn't strictly needed anymore as 1-grams are calculated
-                 // directly in calculateAndDisplayStatistics, but kept for potential future use.
                  words.forEach(word => {
                     ngramCounts[word] = (ngramCounts[word] || 0) + 1;
                     if (!phrasesInThisVerse.has(word)) {
@@ -750,8 +771,6 @@
                     }
                  });
               }
-              // Add else if blocks here for n=3, n=4 etc. if implementing later
-              // using the original slice/join approach or further optimizations.
           });
 
            // Combine counts into the desired format
@@ -794,97 +813,161 @@
          statsTotalCount.textContent = totalScripturesMatched;
          statsVolumeList.innerHTML = ""; const sortedVolumeNames = Object.keys(volumeCounts).sort((a, b) => { const indexA = HARDCODED_VOLUME_ORDER.indexOf(a); const indexB = HARDCODED_VOLUME_ORDER.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return a.localeCompare(b); });
          if (sortedVolumeNames.length > 0) { sortedVolumeNames.forEach((volume) => { const dt = document.createElement("dt"); dt.textContent = volume; const dd = document.createElement("dd"); dd.textContent = volumeCounts[volume]; statsVolumeList.appendChild(dt); statsVolumeList.appendChild(dd); }); } else { statsVolumeList.innerHTML = '<dt class="text-gray-500">No volume data available.</dt>'; }
-         switchNgramTab('1gram'); // Default to 1-gram tab view
+         // Don't switch tab here, let performSearch handle calling switchNgramTab after success
          console.log("Statistics calculation complete.");
       }
 
       // --- Word Cloud Rendering ---
-       function renderWordCloud() {
-           console.log("Rendering word cloud...");
-           wordCloudStatus.textContent = "Generating word cloud..."; // Show status
-           wordCloudContainer.innerHTML = ''; // Clear previous cloud SVG and status
-           wordCloudContainer.appendChild(wordCloudStatus); // Re-add status temporarily
+       function renderWordCloud(ngramSize) { // Added ngramSize parameter
+           console.log(`Rendering word cloud for ${ngramSize}-gram...`);
+           const containerId = `wordCloudContainer${ngramSize}gram`;
+           const cloudContainer = document.getElementById(containerId);
 
-           const wordData = currentFrequencyData[1] // Use 1-gram data
-               .slice(0, WORD_CLOUD_LIMIT) // Limit number of words
-               .map(d => ({ text: d.word, size: Math.sqrt(d.total) * 5 })); // Map to {text, size}, adjust scaling factor as needed
+           if (!cloudContainer) {
+               console.warn(`Word cloud container ${containerId} not found.`);
+               return;
+           }
+
+           const statusElement = cloudContainer.querySelector('.wordCloudStatus');
+           if (statusElement) statusElement.textContent = "Generating word cloud...";
+           cloudContainer.innerHTML = ''; // Clear previous cloud SVG
+            if (statusElement) cloudContainer.appendChild(statusElement); // Re-add status temporarily
+
+
+           const frequencyData = currentFrequencyData[ngramSize] || [];
+           const dataKey = ngramSize === 1 ? 'word' : 'phrase'; // Key to use for text
+
+           const wordData = frequencyData
+               .slice(0, WORD_CLOUD_LIMIT) // Limit number of words/phrases
+               .map(d => ({
+                   text: d[dataKey], // Use 'word' or 'phrase'
+                   size: Math.sqrt(d.total) * (ngramSize === 1 ? 5 : 4) // Adjust scaling factor (e.g., smaller for phrases)
+                }));
 
            if (wordData.length === 0) {
-               console.log("No data for word cloud.");
-               wordCloudStatus.textContent = "Not enough data to generate word cloud.";
+               console.log(`No data for ${ngramSize}-gram word cloud.`);
+               if (statusElement) statusElement.textContent = `Not enough data to generate ${ngramSize}-gram cloud.`;
                return;
            }
 
            try { // Add try...catch around D3 layout
-               const layout = d3.layout.cloud()
-                   .size([wordCloudContainer.clientWidth > 0 ? wordCloudContainer.clientWidth : 300, 300]) // Use container width (with fallback), fixed height
+               // Ensure container has width before calculating layout
+               const containerWidth = cloudContainer.clientWidth > 0 ? cloudContainer.clientWidth : 300;
+               const containerHeight = 250; // Keep height relatively fixed
+
+               wordCloudLayout = d3.layout.cloud() // Assign to global layout variable
+                   .size([containerWidth, containerHeight])
                    .words(wordData)
-                   .padding(5)
-                   .rotate(() => (Math.random() > 0.7 ? 90 : 0)) // Random rotation (optional)
+                   .padding(ngramSize === 1 ? 5 : 2) // Less padding for phrases maybe
+                   .rotate(() => (ngramSize === 1 && Math.random() > 0.7 ? 90 : 0)) // Rotate words, not phrases
                    .font("sans-serif")
                    .fontSize(d => d.size)
-                   .on("end", drawWordCloud); // Call draw function when layout is done
+                   .on("end", (words) => drawWordCloud(words, ngramSize, containerId, containerWidth, containerHeight)); // Pass size and containerId
 
-               layout.start();
+               wordCloudLayout.start();
            } catch (error) {
-                console.error("Error initializing D3 cloud layout:", error);
-                wordCloudStatus.textContent = "Error generating word cloud layout.";
+                console.error(`Error initializing D3 cloud layout for ${ngramSize}-gram:`, error);
+                if (statusElement) statusElement.textContent = `Error generating ${ngramSize}-gram cloud layout.`;
            }
+       }
 
+       function drawWordCloud(words, ngramSize, containerId, width, height) { // Receive size and containerId
+           console.log(`Drawing ${ngramSize}-gram word cloud SVG in ${containerId}...`);
+           const cloudContainer = document.getElementById(containerId);
 
-           function drawWordCloud(words) {
-               console.log("Drawing word cloud SVG...");
-               wordCloudStatus.textContent = ""; // Clear status message
-               wordCloudContainer.innerHTML = ''; // Clear container fully
+           // Check if container is still available
+           if (!cloudContainer) { console.warn(`Word cloud container ${containerId} not found during draw.`); return; }
 
-               // Check if container is still available
-               if (!document.getElementById('wordCloudContainer')) { console.warn("Word cloud container not found during draw."); return; }
+            // Clear status message and previous SVG (if any)
+           cloudContainer.innerHTML = '';
 
-               try { // Add try...catch around D3 drawing
-                   const svg = d3.select("#wordCloudContainer").append("svg")
-                       .attr("width", layout.size()[0])
-                       .attr("height", layout.size()[1])
-                       .append("g")
-                       .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")");
+           try { // Add try...catch around D3 drawing
+               const svg = d3.select(`#${containerId}`).append("svg")
+                   .attr("width", width)
+                   .attr("height", height)
+                   .append("g")
+                   .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-                   svg.selectAll("text")
-                       .data(words)
-                       .enter().append("text")
-                       .style("font-size", d => d.size + "px")
-                       .style("font-family", "sans-serif")
-                       .style("fill", (d, i) => d3.schemeCategory10[i % 10]) // Color words
-                       .attr("text-anchor", "middle")
-                       .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
-                       .text(d => d.text)
-                       .attr("class", "word-cloud-word") // Add class for potential styling/interaction
-                       .on("click", (event, d) => { // Add click interaction
-                           console.log("Word clicked:", d.text);
-                           searchInput.value = d.text; // Put clicked word into search bar
-                           regexSearchCheckbox.checked = false; // Search as exact phrase usually
-                           performSearch(); // Trigger a new search
-                       });
-                   console.log("Word cloud drawn.");
-               } catch (error) {
-                   console.error("Error drawing D3 word cloud:", error);
-                   wordCloudContainer.innerHTML = '<p id="wordCloudStatus" class="text-center text-red-600 p-4">Error drawing word cloud.</p>';
-               }
+               svg.selectAll("text")
+                   .data(words)
+                   .enter().append("text")
+                   .style("font-size", d => d.size + "px")
+                   .style("font-family", "sans-serif")
+                   .style("fill", (d, i) => d3.schemeCategory10[i % 10]) // Color words/phrases
+                   .attr("text-anchor", "middle")
+                   .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
+                   .text(d => d.text)
+                   .attr("class", "word-cloud-word") // Add class for potential styling/interaction
+                   .on("click", (event, d) => { // Add click interaction
+                       console.log(`${ngramSize}-gram clicked:`, d.text);
+                       searchInput.value = d.text; // Put clicked word/phrase into search bar
+                       regexSearchCheckbox.checked = false; // Search as exact phrase usually
+                       performSearch(); // Trigger a new search
+                   });
+               console.log(`${ngramSize}-gram word cloud drawn.`);
+           } catch (error) {
+               console.error(`Error drawing D3 ${ngramSize}-gram word cloud:`, error);
+               cloudContainer.innerHTML = `<p class="wordCloudStatus text-center text-red-600 p-4">Error drawing ${ngramSize}-gram cloud.</p>`;
            }
        }
 
 
       // --- Frequency Table Rendering (Generic for N-grams) ---
-      function renderFrequencyTable() { /* ... (no changes) ... */
-          console.log(`Rendering frequency table for ${currentNgramSize}-gram.`); const data = currentFrequencyData[currentNgramSize] || []; let tableBody; let headers; let colspan; let defaultSortCol; let defaultSortDir;
-          if (currentNgramSize === 1) { tableBody = statsWordTableBody; headers = statsWordTableHeaders; colspan = 6; defaultSortCol = 'total'; defaultSortDir = 'desc'; }
-          else if (currentNgramSize === 2) { tableBody = statsBigramTableBody; headers = statsBigramTableHeaders; colspan = 3; defaultSortCol = 'total'; defaultSortDir = 'desc'; }
-          else { console.error("Unsupported N-gram size for table rendering:", currentNgramSize); return; }
+      function renderFrequencyTable() {
+          console.log(`Rendering frequency table for ${currentNgramSize}-gram.`);
+          const data = currentFrequencyData[currentNgramSize] || [];
+          let tableBody; let headers; let colspan; let defaultSortCol; let defaultSortDir;
+          let dataKey; // Key for the word/phrase
+
+          if (currentNgramSize === 1) {
+              tableBody = statsWordTableBody; headers = statsWordTableHeaders; colspan = 6;
+              defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'word';
+          } else if (currentNgramSize === 2) {
+              tableBody = statsBigramTableBody; headers = statsBigramTableHeaders; colspan = 3;
+              defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'phrase';
+          } else { console.error("Unsupported N-gram size for table rendering:", currentNgramSize); return; }
+
           tableBody.innerHTML = "";
-          if (!headers || !Array.from(headers).some(th => th.dataset.sort === currentSortColumn)) { currentSortColumn = defaultSortCol; currentSortDirection = defaultSortDir; console.log(`Resetting sort for ${currentNgramSize}-gram to ${currentSortColumn} ${currentSortDirection}`); }
-          data.sort((a, b) => { let compareA = a[currentSortColumn]; let compareB = b[currentSortColumn]; if (currentSortColumn === "word" || currentSortColumn === "phrase") { compareA = (compareA || "").toLowerCase(); compareB = (compareB || "").toLowerCase(); } else { compareA = Number(compareA || 0); compareB = Number(compareB || 0); } if (compareA < compareB) return currentSortDirection === "asc" ? -1 : 1; if (compareA > compareB) return currentSortDirection === "asc" ? 1 : -1; return 0; });
-          headers.forEach((th) => { th.classList.remove("sorted-asc", "sorted-desc"); if (th.dataset.sort === currentSortColumn) { th.classList.add(currentSortDirection === "asc" ? "sorted-asc" : "sorted-desc"); } });
+
+          // Apply sorting
+          if (!headers || !Array.from(headers).some(th => th.dataset.sort === currentSortColumn)) {
+              currentSortColumn = defaultSortCol; currentSortDirection = defaultSortDir;
+              console.log(`Resetting sort for ${currentNgramSize}-gram to ${currentSortColumn} ${currentSortDirection}`);
+          }
+          data.sort((a, b) => {
+              let compareA = a[currentSortColumn]; let compareB = b[currentSortColumn];
+              if (currentSortColumn === "word" || currentSortColumn === "phrase") { compareA = (compareA || "").toLowerCase(); compareB = (compareB || "").toLowerCase(); }
+              else { compareA = Number(compareA || 0); compareB = Number(compareB || 0); }
+              if (compareA < compareB) return currentSortDirection === "asc" ? -1 : 1;
+              if (compareA > compareB) return currentSortDirection === "asc" ? 1 : -1;
+              return 0;
+          });
+
+          // Update header styles
+          headers.forEach((th) => {
+              th.classList.remove("sorted-asc", "sorted-desc");
+              if (th.dataset.sort === currentSortColumn) { th.classList.add(currentSortDirection === "asc" ? "sorted-asc" : "sorted-desc"); }
+          });
+
+          // Populate table rows
           const dataToDisplay = data.slice(0, 100);
-          if (dataToDisplay.length === 0) { console.log(`No ${currentNgramSize}-gram data to display.`); tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-gray-500 py-4">No ${currentNgramSize}-gram frequency data to display.</td></tr>`; }
-          else { console.log(`Populating ${currentNgramSize}-gram table with ${dataToDisplay.length} rows.`); dataToDisplay.forEach((item) => { const row = tableBody.insertRow(); if (currentNgramSize === 1) { row.insertCell().textContent = item.word; row.insertCell().textContent = item.total; row.insertCell().textContent = item.unique; row.insertCell().textContent = formatStat(item.freqPerScripture, 3); row.insertCell().textContent = formatPercentage(item.freqPerWord, 2); row.insertCell().textContent = formatPercentage(item.coverage, 1); } else if (currentNgramSize === 2) { row.insertCell().textContent = item.phrase; row.insertCell().textContent = item.total; row.insertCell().textContent = item.unique; } }); }
+          if (dataToDisplay.length === 0) {
+              console.log(`No ${currentNgramSize}-gram data to display.`);
+              tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-gray-500 py-4">No ${currentNgramSize}-gram frequency data to display.</td></tr>`;
+          } else {
+              console.log(`Populating ${currentNgramSize}-gram table with ${dataToDisplay.length} rows.`);
+              dataToDisplay.forEach((item) => {
+                  const row = tableBody.insertRow();
+                  row.insertCell().textContent = item[dataKey]; // Use dataKey ('word' or 'phrase')
+                  row.insertCell().textContent = item.total;
+                  row.insertCell().textContent = item.unique;
+                  if (currentNgramSize === 1) { // Only add extra cols for 1-gram
+                      row.insertCell().textContent = formatStat(item.freqPerScripture, 3);
+                      row.insertCell().textContent = formatPercentage(item.freqPerWord, 2);
+                      row.insertCell().textContent = formatPercentage(item.coverage, 1);
+                  }
+              });
+          }
       }
 
 
@@ -898,13 +981,24 @@
 
 
       // --- Clear Statistics Display ---
-      function clearStatisticsDisplay() { /* ... (no changes) ... */
-         console.log("Clearing statistics display."); statsTotalCount.textContent = "0"; statsVolumeList.innerHTML = '<dt class="text-gray-500">N/A</dt>';
+      function clearStatisticsDisplay() {
+         console.log("Clearing statistics display.");
+         statsTotalCount.textContent = "0";
+         statsVolumeList.innerHTML = '<dt class="text-gray-500">N/A</dt>';
+         // Clear all n-gram tables
          statsWordTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Perform a search to see statistics.</td></tr>`;
          statsBigramTableBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 2-gram statistics.</td></tr>`;
-         wordCloudContainer.innerHTML = '<p id="wordCloudStatus" class="text-center text-gray-500 p-4">Perform a search to generate word cloud.</p>';
+         // Clear word clouds in all tabs
+         document.querySelectorAll('.wordCloudContainer').forEach(container => {
+             container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${container.id.includes('1gram') ? 'word' : 'phrase'} cloud.</p>`;
+         });
+         // Clear stored data
          currentFrequencyData = { 1: [], 2: [] };
-         document.querySelectorAll('.stats-table th[data-sort]').forEach((th) => { th.classList.remove("sorted-asc", "sorted-desc"); });
+         // Reset table header sort indicators
+         document.querySelectorAll('.stats-table th[data-sort]').forEach((th) => {
+             th.classList.remove("sorted-asc", "sorted-desc");
+         });
+         // Reset active n-gram tab to default
          switchNgramTab('1gram');
          statsError.classList.add('hidden'); statsError.textContent = ''; // Also clear stats error message
       }

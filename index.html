@@ -71,6 +71,16 @@
         background-color: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         border: 1px solid #e5e7eb; display: flex; flex-direction: column; justify-content: space-between; position: relative;
       }
+      /* Clickable scripture heading in result card (for main results) */
+      .result-card .scripture-title-heading.clickable-heading {
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+      .result-card .scripture-title-heading.clickable-heading:hover {
+        color: #2563eb; /* blue-600 */
+        text-decoration: underline;
+      }
+
 
       /* Copy button */
       .copy-button {
@@ -82,16 +92,16 @@
       .copy-button.copied { background-color: #10b981; color: white; }
 
       /* Scrollbar styles */
-      .results-flex-container::-webkit-scrollbar, .volume-column::-webkit-scrollbar, .modal-box::-webkit-scrollbar { width: 8px; height: 10px; }
-      .results-flex-container::-webkit-scrollbar-track, .volume-column::-webkit-scrollbar-track, .modal-box::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-      .results-flex-container::-webkit-scrollbar-thumb, .volume-column::-webkit-scrollbar-thumb, .modal-box::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
-      .results-flex-container::-webkit-scrollbar-thumb:hover, .volume-column::-webkit-scrollbar-thumb:hover, .modal-box::-webkit-scrollbar-thumb:hover { background: #718096; }
+      .results-flex-container::-webkit-scrollbar, .volume-column::-webkit-scrollbar, .modal-box::-webkit-scrollbar, #contextDrawerContent::-webkit-scrollbar { width: 8px; height: 10px; }
+      .results-flex-container::-webkit-scrollbar-track, .volume-column::-webkit-scrollbar-track, .modal-box::-webkit-scrollbar-track, #contextDrawerContent::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+      .results-flex-container::-webkit-scrollbar-thumb, .volume-column::-webkit-scrollbar-thumb, .modal-box::-webkit-scrollbar-thumb, #contextDrawerContent::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
+      .results-flex-container::-webkit-scrollbar-thumb:hover, .volume-column::-webkit-scrollbar-thumb:hover, .modal-box::-webkit-scrollbar-thumb:hover, #contextDrawerContent::-webkit-scrollbar-thumb:hover { background: #718096; }
 
       /* Error message styles */
       .input-error-message { color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem; }
       .input-error-message:empty { display: none; }
 
-      /* Modal styles (Shared by Help and Stats Explanation) */
+      /* Modal styles (Shared by Help, Stats Explanation, and Context Drawer) */
       .modal-overlay {
         position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5);
         display: flex; justify-content: center; align-items: center; z-index: 1000;
@@ -118,34 +128,38 @@
       .modal-content code { background-color: #f3f4f6; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.9em; }
       .modal-content dt { font-weight: 600; color: #1f2937; margin-top: 0.5rem;}
       .modal-content dd { margin-left: 1.5rem; margin-bottom: 0.5rem; font-size: 0.95em; }
-      /* Style for stop words list in modal */
       .stop-words-list {
-          column-count: 3; /* Adjust number of columns as needed */
-          column-gap: 1rem;
-          list-style: none;
-          padding-left: 0;
-          font-size: 0.875rem; /* Smaller font size */
-          max-height: 300px; /* Limit height - adjust if needed */
-          overflow-y: auto; /* This makes the list scrollable if content exceeds max-height */
-          border: 1px solid #e5e7eb;
-          padding: 0.5rem;
-          border-radius: 0.375rem;
-          background-color: #f9fafb;
+          column-count: 3; column-gap: 1rem; list-style: none; padding-left: 0; font-size: 0.875rem;
+          max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; padding: 0.5rem;
+          border-radius: 0.375rem; background-color: #f9fafb;
       }
-      /* Custom scrollbar for stop words list (optional) */
        .stop-words-list::-webkit-scrollbar { width: 6px; }
        .stop-words-list::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
        .stop-words-list::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
        .stop-words-list::-webkit-scrollbar-thumb:hover { background: #718096; }
-
        .stop-words-list li {
-           margin-bottom: 0.25rem;
-           color: #4b5563; /* gray-600 */
-           /* Prevent columns from breaking words awkwardly */
-           -webkit-column-break-inside: avoid;
-           page-break-inside: avoid;
-           break-inside: avoid;
+           margin-bottom: 0.25rem; color: #4b5563; -webkit-column-break-inside: avoid;
+           page-break-inside: avoid; break-inside: avoid;
        }
+
+      /* Context Drawer Specific Styles */
+      .context-drawer-box {
+          width: 700px; /* Wider for context view */
+          max-width: 95%;
+      }
+      #contextDrawerContent {
+          max-height: calc(80vh - 100px); /* Adjust based on title and padding */
+          overflow-y: auto;
+          padding-right: 1rem; /* Space for scrollbar */
+          /* space-y-2 is applied via Tailwind in HTML, handles spacing between cards */
+      }
+      /* Styles for the highlighted current verse in the context drawer */
+      #contextDrawerContent .result-card.current-context-verse {
+          background-color: #e0e7ff; /* indigo-100 */
+          border-color: #a5b4fc; /* indigo-300 */
+          box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06), 0 0 0 2px #c7d2fe; /* Original shadow + indigo-200 focus ring like */
+      }
+      /* The .context-drawer-verse class itself is no longer needed for individual verse styling if using result-card structure */
 
 
       /* Search status style */
@@ -154,17 +168,9 @@
 
       /* Style for fallback data message */
       #fallbackMessage {
-        font-size: 0.875rem; /* text-sm */
-        color: #ca8a04; /* yellow-600 */
-        background-color: #fef9c3; /* yellow-100 */
-        border: 1px solid #fde68a; /* yellow-200 */
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem; /* rounded-md */
-        margin-bottom: 1rem;
-        text-align: center;
-        max-width: 4xl;
-        margin-left: auto;
-        margin-right: auto;
+        font-size: 0.875rem; color: #ca8a04; background-color: #fef9c3;
+        border: 1px solid #fde68a; padding: 0.5rem 1rem; border-radius: 0.375rem;
+        margin-bottom: 1rem; text-align: center; max-width: 4xl; margin-left: auto; margin-right: auto;
       }
       #fallbackMessage:empty { display: none; }
 
@@ -204,137 +210,38 @@
       .stats-table tbody tr:nth-child(even) { background-color: #f9fafb; }
 
       /* Volume Breakdown Chart Style */
-      #statsVolumeChartContainer {
-          width: 100%;
-          min-height: 200px; /* Adjust as needed */
-          margin-bottom: 1rem;
-          position: relative; /* For potential tooltips or overlays */
-      }
-      #statsVolumeChartContainer svg {
-          display: block; /* Prevent extra space */
-          width: 100%;
-          height: auto; /* Let height be determined by content */
-      }
-      #statsVolumeChartContainer .axis path,
-      #statsVolumeChartContainer .axis line {
-          fill: none;
-          stroke: #9ca3af; /* gray-400 */
-          shape-rendering: crispEdges;
-      }
-      #statsVolumeChartContainer .axis text {
-          font-size: 0.75rem; /* 12px */
-          fill: #4b5563; /* gray-600 */
-      }
-      #statsVolumeChartContainer .bar {
-          fill: #60a5fa; /* blue-400 */
-          transition: fill 0.2s ease-in-out;
-      }
-      #statsVolumeChartContainer .bar:hover {
-          fill: #3b82f6; /* blue-500 */
-      }
-      #statsVolumeChartContainer .bar-label {
-          fill: #1f2937; /* gray-800 */
-          font-size: 0.75rem; /* 12px */
-          text-anchor: start;
-          dominant-baseline: central;
-      }
+      #statsVolumeChartContainer { width: 100%; min-height: 200px; margin-bottom: 1rem; position: relative; }
+      #statsVolumeChartContainer svg { display: block; width: 100%; height: auto; }
+      #statsVolumeChartContainer .axis path, #statsVolumeChartContainer .axis line { fill: none; stroke: #9ca3af; shape-rendering: crispEdges; }
+      #statsVolumeChartContainer .axis text { font-size: 0.75rem; fill: #4b5563; }
+      #statsVolumeChartContainer .bar { fill: #60a5fa; transition: fill 0.2s ease-in-out; }
+      #statsVolumeChartContainer .bar:hover { fill: #3b82f6; }
+      #statsVolumeChartContainer .bar-label { fill: #1f2937; font-size: 0.75rem; text-anchor: start; dominant-baseline: central; }
 
       /* Word Forms Breakdown Style */
-       #statsWordFormsContainer {
-           font-size: 0.875rem;
-           margin-top: 0.5rem;
-       }
-       #statsWordFormsContainer h5 {
-           font-weight: 600;
-           color: #4b5563; /* gray-600 */
-           margin-bottom: 0.25rem;
-           font-size: 0.9em;
-       }
-       #statsWordFormsContainer ul {
-           list-style: none;
-           padding-left: 0;
-           max-height: 150px; /* Limit height and make scrollable if needed */
-           overflow-y: auto;
-           border: 1px solid #e5e7eb; /* Added border */
-           border-radius: 0.375rem; /* Added border radius */
-           padding: 0.5rem; /* Added padding */
-           background-color: #f9fafb; /* Light background */
-       }
-       #statsWordFormsContainer li {
-           display: flex;
-           justify-content: space-between;
-           padding: 0.1rem 0;
-           font-size: 0.9em;
-           color: #374151; /* gray-700 */
-       }
-        #statsWordFormsContainer li span:first-child {
-           margin-right: 0.5rem; /* Space between word and count */
-           word-break: break-all; /* Prevent long words overflowing */
-       }
-       #statsWordFormsContainer li span:last-child {
-           font-weight: 500;
-           color: #1f2937; /* gray-800 */
-           white-space: nowrap;
-       }
+       #statsWordFormsContainer { font-size: 0.875rem; margin-top: 0.5rem; }
+       #statsWordFormsContainer h5 { font-weight: 600; color: #4b5563; margin-bottom: 0.25rem; font-size: 0.9em; }
+       #statsWordFormsContainer ul { list-style: none; padding-left: 0; max-height: 150px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 0.5rem; background-color: #f9fafb; }
+       #statsWordFormsContainer li { display: flex; justify-content: space-between; padding: 0.1rem 0; font-size: 0.9em; color: #374151; }
+       #statsWordFormsContainer li span:first-child { margin-right: 0.5rem; word-break: break-all; }
+       #statsWordFormsContainer li span:last-child { font-weight: 500; color: #1f2937; white-space: nowrap; }
        #statsWordFormsContainer .word-form-list::-webkit-scrollbar { width: 5px; }
        #statsWordFormsContainer .word-form-list::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
        #statsWordFormsContainer .word-form-list::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
        #statsWordFormsContainer .word-form-list::-webkit-scrollbar-thumb:hover { background: #718096; }
-       #statsWordFormsContainer p.no-forms { /* Style for when no forms are found */
-           font-style: italic;
-           color: #6b7280; /* gray-500 */
-           font-size: 0.9em;
-           margin-top: 0.25rem;
-           padding: 0.5rem; /* Added padding */
-           border: 1px solid #e5e7eb; /* Added border */
-           border-radius: 0.375rem; /* Added border radius */
-           background-color: #f9fafb; /* Light background */
-           text-align: center;
-       }
-
+       #statsWordFormsContainer p.no-forms { font-style: italic; color: #6b7280; font-size: 0.9em; margin-top: 0.25rem; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; background-color: #f9fafb; text-align: center; }
 
       /* Word Cloud Style */
-      .wordCloudContainer { /* Use class instead of ID */
-          width: 100%;
-          min-height: 250px; /* Ensure space for the cloud */
-          border: 1px solid #e5e7eb; /* Optional border */
-          border-radius: 0.375rem;
-          position: relative; /* For potential loading indicators */
-          background-color: #f9fafb; /* Light background */
-          margin-top: 1rem; /* Add space above cloud */
-      }
-       .wordCloudContainer svg { /* Select SVG within the container */
-           display: block; /* Prevent extra space below SVG */
-           margin: auto; /* Center the cloud if container is wider */
-       }
-      /* Style for words in the cloud (optional) */
-       .word-cloud-word {
-           font-family: sans-serif; /* Or a specific font */
-           cursor: pointer; /* Indicate clickable */
-           transition: fill 0.2s;
-       }
-       .word-cloud-word:hover {
-           fill: #3b82f6; /* Highlight on hover */
-       }
-        /* Info icon style */
+      .wordCloudContainer { width: 100%; min-height: 250px; border: 1px solid #e5e7eb; border-radius: 0.375rem; position: relative; background-color: #f9fafb; margin-top: 1rem; }
+      .wordCloudContainer svg { display: block; margin: auto; }
+      .word-cloud-word { font-family: sans-serif; cursor: pointer; transition: fill 0.2s; }
+      .word-cloud-word:hover { fill: #3b82f6; }
       .info-icon {
-          display: inline-block;
-          width: 0.8em; /* Smaller size */
-          height: 0.8em;
-          line-height: 0.8em; /* Center text vertically */
-          text-align: center;
-          border-radius: 50%;
-          background-color: #9ca3af; /* gray-400 */
-          color: white;
-          font-size: 0.7em; /* Smaller font */
-          font-weight: bold;
-          margin-left: 4px;
-          cursor: help; /* Indicate it provides help */
-          vertical-align: middle; /* Align with text */
-          position: relative; /* Needed if using more complex tooltips */
-          top: -1px; /* Fine-tune vertical alignment */
+          display: inline-block; width: 0.8em; height: 0.8em; line-height: 0.8em; text-align: center;
+          border-radius: 50%; background-color: #9ca3af; color: white; font-size: 0.7em;
+          font-weight: bold; margin-left: 4px; cursor: help; vertical-align: middle;
+          position: relative; top: -1px;
       }
-
     </style>
   </head>
   <body>
@@ -547,52 +454,28 @@
         <div class="modal-content">
           <h3>Understanding the Statistics</h3>
           <p>These statistics provide insights into the words and phrases found within the scriptures matching your search criteria.</p>
-
           <h4>Overall Summary</h4>
-          <dl>
-              <dt>Total Unique Scriptures Matched</dt>
-              <dd>The total number of distinct scripture verses returned by your current search filters and criteria.</dd>
-          </dl>
-
+          <dl><dt>Total Unique Scriptures Matched</dt><dd>The total number of distinct scripture verses returned by your current search filters and criteria.</dd></dl>
           <h4>Matches per Volume Chart</h4>
-           <p>A horizontal bar chart showing the number of matched scriptures belonging to each volume.</p>
-
+          <p>A horizontal bar chart showing the number of matched scriptures belonging to each volume.</p>
           <h4>Word Forms Breakdown</h4>
           <p>If you performed a non-regex search for a single word (e.g., "faith"), this section shows the counts for different words found in the results that start with your normalized search term (e.g., "faith", "faithful", "faithfulness"). This helps clarify how the total match count relates to specific word variations.</p>
-          <dl>
-              <dt>Word Form: Count</dt>
-              <dd>Shows the total number of times each specific word form appears across all matched scriptures.</dd>
-          </dl>
-
+          <dl><dt>Word Form: Count</dt><dd>Shows the total number of times each specific word form appears across all matched scriptures.</dd></dl>
           <h4>N-gram Analysis Section</h4>
           <p>This section shows the most common words (1-gram), pairs (2-gram), or triplets (3-gram) found in the matched scriptures. Each tab provides a word/phrase cloud visualization and a frequency table.</p>
           <p>Use the "Exclude Stop Words" checkbox to control whether common words (like "the", "a", "is") are included in the analysis. Excluding them often highlights more meaningful terms, especially for 1-grams. Including them preserves the exact phrasing for 2-grams and 3-grams.</p>
-
           <h5>Word/Phrase Cloud</h5>
-           <p>A visual representation of the most frequent items (words, pairs, or triplets) for the selected N-gram size. Larger items appear more frequently. Clicking an item will search for it (only works well for single words).</p>
-
+          <p>A visual representation of the most frequent items (words, pairs, or triplets) for the selected N-gram size. Larger items appear more frequently. Clicking an item will search for it (only works well for single words).</p>
           <h5>Frequency Tables</h5>
           <p>These tables show detailed counts for individual words (1-gram), pairs (2-gram), or triplets (3-gram).</p>
           <dl>
-            <dt>Word / Phrase / Triplet</dt>
-            <dd>The specific normalized word (1-gram), sequence of two words (2-gram), or sequence of three words (3-gram) being analyzed.</dd>
-
-            <dt>Total Count</dt>
-            <dd>The absolute total number of times this <strong>specific item</strong> appears across ALL matched scriptures. An item can appear multiple times in a single scripture.</dd>
-
-            <dt>Unique Count</dt>
-            <dd>The number of unique scriptures (out of the 'Total Unique Scriptures Matched') that contain this <strong>specific item</strong> at least once.</dd>
-
-            <dt>Freq/Scripture (1-gram only)</dt>
-            <dd>Average number of times this specific word appears per matched scripture. Calculated as: <code>Word's Total Count / Total Unique Scriptures Matched</code>.</dd>
-
-            <dt>Freq/Word (1-gram only)</dt>
-            <dd>The proportion of this specific word relative to all words counted across all matched scriptures (respecting the "Exclude Stop Words" setting). Calculated as: <code>Word's Total Count / Total Words Counted</code>.</dd>
-
-            <dt>Coverage (1-gram only)</dt>
-            <dd>The percentage of matched scriptures that contain this specific word at least once. Calculated as: <code>Word's Unique Count / Total Unique Scriptures Matched</code>.</dd>
+            <dt>Word / Phrase / Triplet</dt><dd>The specific normalized word (1-gram), sequence of two words (2-gram), or sequence of three words (3-gram) being analyzed.</dd>
+            <dt>Total Count</dt><dd>The absolute total number of times this <strong>specific item</strong> appears across ALL matched scriptures. An item can appear multiple times in a single scripture.</dd>
+            <dt>Unique Count</dt><dd>The number of unique scriptures (out of the 'Total Unique Scriptures Matched') that contain this <strong>specific item</strong> at least once.</dd>
+            <dt>Freq/Scripture (1-gram only)</dt><dd>Average number of times this specific word appears per matched scripture. Calculated as: <code>Word's Total Count / Total Unique Scriptures Matched</code>.</dd>
+            <dt>Freq/Word (1-gram only)</dt><dd>The proportion of this specific word relative to all words counted across all matched scriptures (respecting the "Exclude Stop Words" setting). Calculated as: <code>Word's Total Count / Total Words Counted</code>.</dd>
+            <dt>Coverage (1-gram only)</dt><dd>The percentage of matched scriptures that contain this specific word at least once. Calculated as: <code>Word's Unique Count / Total Unique Scriptures Matched</code>.</dd>
           </dl>
-
         </div>
       </div>
     </div>
@@ -610,6 +493,16 @@
       </div>
     </div>
 
+    <div id="contextDrawerOverlay" class="modal-overlay">
+        <div class="modal-box context-drawer-box">
+            <button id="contextDrawerCloseButton" class="modal-close-button">&times;</button>
+            <h3 id="contextDrawerTitle" class="text-xl font-semibold mb-4 text-gray-700">Chapter Context</h3>
+            <div id="contextDrawerContent" class="space-y-2">
+                <p class="text-center text-gray-500">Loading context...</p>
+            </div>
+        </div>
+    </div>
+
 
     <script>
       // --- Constants ---
@@ -617,6 +510,7 @@
       const STOP_WORDS = new Set(["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"]);
       const WORD_CLOUD_LIMIT = 75; // Max words in word cloud
       const RESULT_RENDER_LIMIT = 2000; // Max results to render
+      const CONTEXT_VERSE_RANGE = 15; // Number of verses before and after the clicked one
 
       // --- Global Variables ---
       const scriptureCache = { lds: null, currentResults: [] };
@@ -629,7 +523,7 @@
       let currentSortDirection = "desc";
       let firstSearchPerformed = false;
       let currentNgramSize = 1;
-      let wordCloudLayout = null; // Store the layout object
+      let wordCloudLayout = null;
 
       // --- DOM Element References ---
       const volumeCheckboxesContainer = document.getElementById("volumeCheckboxes");
@@ -649,9 +543,23 @@
       const resultsHeadingText = document.getElementById("resultsHeadingText");
       const searchStatus = document.getElementById("searchStatus");
       const fallbackMessage = document.getElementById("fallbackMessage");
+      // Modals
       const howToSearchButton = document.getElementById("howToSearchButton");
       const searchHelpModalOverlay = document.getElementById("searchHelpModalOverlay");
       const searchHelpModalCloseButton = document.getElementById("searchHelpModalCloseButton");
+      const explainStatsButton = document.getElementById("explainStatsButton");
+      const statsHelpModalOverlay = document.getElementById("statsHelpModalOverlay");
+      const statsHelpModalCloseButton = document.getElementById("statsHelpModalCloseButton");
+      const showStopWordsButton = document.getElementById("showStopWordsButton");
+      const stopWordsModalOverlay = document.getElementById("stopWordsModalOverlay");
+      const stopWordsModalCloseButton = document.getElementById("stopWordsModalCloseButton");
+      const stopWordsListDisplay = document.getElementById("stopWordsListDisplay");
+      // Context Drawer
+      const contextDrawerOverlay = document.getElementById("contextDrawerOverlay");
+      const contextDrawerCloseButton = document.getElementById("contextDrawerCloseButton");
+      const contextDrawerTitle = document.getElementById("contextDrawerTitle");
+      const contextDrawerContent = document.getElementById("contextDrawerContent");
+      // Advanced Search
       const advancedSearchArea = document.getElementById("advancedSearchArea");
       const toggleAdvancedSearchButton = document.getElementById("toggleAdvancedSearchButton");
       const toggleAdvancedSearchButtonText = document.getElementById("toggleAdvancedSearchButtonText");
@@ -659,11 +567,13 @@
       const showAdvancedOptionsButton = document.getElementById("showAdvancedOptionsButton");
       const toggleIconCollapse = toggleAdvancedSearchButton.querySelector(".toggle-icon-collapse");
       const toggleIconExpand = toggleAdvancedSearchButton.querySelector(".toggle-icon-expand");
+      // Tabs
       const scripturesTabButton = document.getElementById("scripturesTabButton");
       const statsTabButton = document.getElementById("statsTabButton");
       const scripturesContent = document.getElementById("scripturesContent");
       const statisticsContent = document.getElementById("statisticsContent");
       const scripturesTabCount = document.getElementById("scripturesTabCount");
+      // Statistics Area
       const statsDisplayArea = document.getElementById("statsDisplayArea");
       const statsTotalCount = document.getElementById("statsTotalCount");
       const statsVolumeChartContainer = document.getElementById("statsVolumeChartContainer");
@@ -675,10 +585,6 @@
       const ngramTabContentContainer = document.getElementById("ngramTabContentContainer");
       const ngramTabContents = ngramTabContentContainer.querySelectorAll(".ngram-tab-content");
       const excludeStopWordsCheckbox = document.getElementById("excludeStopWordsCheckbox");
-      const showStopWordsButton = document.getElementById("showStopWordsButton");
-      const stopWordsModalOverlay = document.getElementById("stopWordsModalOverlay");
-      const stopWordsModalCloseButton = document.getElementById("stopWordsModalCloseButton");
-      const stopWordsListDisplay = document.getElementById("stopWordsListDisplay");
       const statsWordTable = document.getElementById("statsWordTable");
       const statsWordTableBody = document.getElementById("statsWordTableBody");
       const statsWordTableHeaders = statsWordTable.querySelectorAll("thead th[data-sort]");
@@ -688,12 +594,10 @@
       const statsTrigramTable = document.getElementById("statsTrigramTable");
       const statsTrigramTableBody = document.getElementById("statsTrigramTableBody");
       const statsTrigramTableHeaders = statsTrigramTable.querySelectorAll("thead th[data-sort]");
-      const explainStatsButton = document.getElementById("explainStatsButton");
-      const statsHelpModalOverlay = document.getElementById("statsHelpModalOverlay");
-      const statsHelpModalCloseButton = document.getElementById("statsHelpModalCloseButton");
       const statsError = document.getElementById("statsError");
 
-      // --- Dummy Scripture Data ---
+
+      // --- Dummy Scripture Data (Ensure it's sufficient for context testing) ---
       const DUMMY_SCRIPTURE_DATA = [
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 1, "verse_title": "Genesis 1:1", "verse_short_title": "Gen. 1:1", "scripture_text": "In the beginning God created the heaven and the earth." },
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 2, "verse_title": "Genesis 1:2", "verse_short_title": "Gen. 1:2", "scripture_text": "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters." },
@@ -706,21 +610,22 @@
 
 
       // --- Utility Functions ---
-      function shuffleArray(array) { /* ... (no changes) ... */ for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; } }
-      function escapeRegex(str) { /* ... (no changes) ... */ if (typeof str !== "string") return ""; return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-      function normalizeWord(word) { /* ... (no changes) ... */
+      function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; } }
+      function escapeRegex(str) { if (typeof str !== "string") return ""; return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+      function normalizeWord(word) {
           if (!word) return "";
           return word.toLowerCase()
-                     .replace(/^[^\w\s]+|[^\w\s]+$/g, "") // Remove leading/trailing punctuation
-                     .replace(/'s$/g, "") // Remove trailing 's
-                     .replace(/[.,;:!?"'()[\]{}<>]/g, ""); // Remove common internal punctuation
+                     .replace(/^[^\w\s]+|[^\w\s]+$/g, "")
+                     .replace(/'s$/g, "")
+                     .replace(/[.,;:!?"'()[\]{}<>]/g, "");
       }
-      function formatStat(value, decimalPlaces = 3) { /* ... (no changes) ... */ if (typeof value !== 'number' || !isFinite(value)) { return "N/A"; } return value.toFixed(decimalPlaces); }
-      function formatPercentage(value, decimalPlaces = 1) { /* ... (no changes) ... */ if (typeof value !== 'number' || !isFinite(value)) { return "N/A"; } return (value * 100).toFixed(decimalPlaces) + '%'; }
+      function formatStat(value, decimalPlaces = 3) { if (typeof value !== 'number' || !isFinite(value)) { return "N/A"; } return value.toFixed(decimalPlaces); }
+      function formatPercentage(value, decimalPlaces = 1) { if (typeof value !== 'number' || !isFinite(value)) { return "N/A"; } return (value * 100).toFixed(decimalPlaces) + '%'; }
 
 
       // --- Data Fetching and Initialization ---
-      async function fetchScriptureData() { /* ... (no changes) ... */
+      async function fetchScriptureData() {
+          // ... (fetchScriptureData remains largely the same)
           if (scriptureCache.lds) {
               console.log("Using cached scripture data.");
               return scriptureCache.lds;
@@ -729,7 +634,7 @@
           loadingIndicator.classList.remove("hidden");
           resultsContainer.innerHTML = "";
           noResultsMessage.classList.add("hidden");
-          fallbackMessage.textContent = ""; // Clear fallback message
+          fallbackMessage.textContent = ""; 
           clearStatisticsDisplay();
           statsTabButton.disabled = true;
           statsTabButton.classList.remove("active");
@@ -741,7 +646,7 @@
           let usingFallback = false;
 
           try {
-              const response = await fetch("lds-scriptures.json"); // Attempt to fetch the real data
+              const response = await fetch("lds-scriptures.json"); 
               if (!response.ok) {
                   throw new Error(`HTTP error! status: ${response.status}`);
               }
@@ -751,17 +656,14 @@
               }
               console.log(`Successfully fetched and parsed ${data.length} scripture entries.`);
           } catch (error) {
-              // --- Fallback Logic ---
               console.warn(`Error loading LDS scriptures from JSON: ${error.message}. Using fallback dummy data.`);
-              data = DUMMY_SCRIPTURE_DATA; // Assign dummy data
+              data = DUMMY_SCRIPTURE_DATA; 
               usingFallback = true;
-              fallbackMessage.textContent = "⚠️ Could not load full scripture data. Using limited fallback data."; // Show message to user
-              // --- End Fallback Logic ---
+              fallbackMessage.textContent = "⚠️ Could not load full scripture data. Using limited fallback data."; 
           }
 
           try {
-              // --- Process the data (either real or dummy) ---
-              scriptureCache.lds = data; // Cache the data being used
+              scriptureCache.lds = data; 
               const foundVolumesSet = new Set();
               booksMap.clear();
 
@@ -788,10 +690,8 @@
               allAvailableVolumes = [...orderedVolumes, ...sortedRemaining];
 
               populateVolumeCheckboxes();
-              return data; // Return the data (real or dummy)
-              // --- End Data Processing ---
+              return data; 
           } catch (processingError) {
-              // Handle errors during the processing stage (even with dummy data)
               console.error("Error processing scripture data (real or fallback):", processingError);
               scripturesContent.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-4xl mx-auto" role="alert"><strong class="font-bold">Data Processing Error!</strong><span class="block sm:inline"> ${processingError.message}</span></div>`;
               scripturesContent.classList.add("active");
@@ -799,14 +699,15 @@
               resultsHeadingText.textContent = "Error";
               scripturesTabCount.textContent = "!";
               searchStatus.textContent = "Failed to process scripture data.";
-              fallbackMessage.textContent = ""; // Clear fallback message if processing failed
-              return []; // Return empty array on processing error
+              fallbackMessage.textContent = ""; 
+              return []; 
           } finally {
               loadingIndicator.classList.add("hidden");
               console.log(`Finished fetchScriptureData attempt. ${usingFallback ? '(Using Fallback Data)' : ''}`);
           }
       }
-      function populateVolumeCheckboxes() { /* ... (no changes) ... */
+      function populateVolumeCheckboxes() {
+          // ... (populateVolumeCheckboxes remains the same)
           volumeCheckboxesContainer.innerHTML = ""; volumeCheckboxElements = [];
           allAvailableVolumes.forEach((volume) => {
               const div = document.createElement("div"); div.className = "flex items-center";
@@ -818,9 +719,9 @@
       }
 
       // --- Event Handlers ---
-      function handleVolumeCheckboxChange() { /* ... (no changes) ... */ updateAllVolumesCheckboxState(); }
-      allVolumesCheckbox.addEventListener("change", () => { /* ... (no changes) ... */ const isChecked = allVolumesCheckbox.checked; volumeCheckboxElements.forEach((checkbox) => (checkbox.checked = isChecked)); });
-      function updateAllVolumesCheckboxState() { /* ... (no changes) ... */
+      function handleVolumeCheckboxChange() { updateAllVolumesCheckboxState(); }
+      allVolumesCheckbox.addEventListener("change", () => { const isChecked = allVolumesCheckbox.checked; volumeCheckboxElements.forEach((checkbox) => (checkbox.checked = isChecked)); });
+      function updateAllVolumesCheckboxState() {
           const totalCheckboxes = volumeCheckboxElements.length; if (totalCheckboxes === 0) { allVolumesCheckbox.checked = false; allVolumesCheckbox.indeterminate = false; return; }
           const checkedCount = volumeCheckboxElements.filter((checkbox) => checkbox.checked).length;
           if (checkedCount === totalCheckboxes) { allVolumesCheckbox.checked = true; allVolumesCheckbox.indeterminate = false; }
@@ -829,8 +730,9 @@
       }
 
       // --- Modal Control ---
-      function openModal(overlayElement) { /* ... (no changes) ... */ overlayElement.classList.add("active"); }
-      function closeModal(overlayElement) { /* ... (no changes) ... */ overlayElement.classList.remove("active"); }
+      function openModal(overlayElement) { overlayElement.classList.add("active"); }
+      function closeModal(overlayElement) { overlayElement.classList.remove("active"); }
+      // Help Modals
       howToSearchButton.addEventListener("click", () => openModal(searchHelpModalOverlay));
       searchHelpModalCloseButton.addEventListener("click", () => closeModal(searchHelpModalOverlay));
       searchHelpModalOverlay.addEventListener("click", (event) => { if (event.target === searchHelpModalOverlay) closeModal(searchHelpModalOverlay); });
@@ -840,17 +742,21 @@
       showStopWordsButton.addEventListener("click", () => openModal(stopWordsModalOverlay));
       stopWordsModalCloseButton.addEventListener("click", () => closeModal(stopWordsModalOverlay));
       stopWordsModalOverlay.addEventListener("click", (event) => { if (event.target === stopWordsModalOverlay) closeModal(stopWordsModalOverlay); });
+      // Context Drawer Modal
+      contextDrawerCloseButton.addEventListener("click", () => closeModal(contextDrawerOverlay));
+      contextDrawerOverlay.addEventListener("click", (event) => { if (event.target === contextDrawerOverlay) closeModal(contextDrawerOverlay); });
 
       document.addEventListener("keydown", (event) => {
           if (event.key === "Escape") {
               if (searchHelpModalOverlay.classList.contains("active")) closeModal(searchHelpModalOverlay);
               if (statsHelpModalOverlay.classList.contains("active")) closeModal(statsHelpModalOverlay);
               if (stopWordsModalOverlay.classList.contains("active")) closeModal(stopWordsModalOverlay);
+              if (contextDrawerOverlay.classList.contains("active")) closeModal(contextDrawerOverlay);
           }
       });
 
       // --- Advanced Search Area Collapse/Expand ---
-      function toggleAdvancedSearchArea(forceCollapse = null) { /* ... (no changes) ... */
+      function toggleAdvancedSearchArea(forceCollapse = null) {
           const isCurrentlyCollapsed = advancedSearchArea.classList.contains("collapsed"); const shouldCollapse = forceCollapse === null ? !isCurrentlyCollapsed : forceCollapse;
           console.log(`Toggling advanced search. Currently collapsed: ${isCurrentlyCollapsed}, Forcing collapse: ${forceCollapse}, Will collapse: ${shouldCollapse}`);
           if (shouldCollapse) {
@@ -865,7 +771,8 @@
       showAdvancedOptionsButton.addEventListener("click", () => toggleAdvancedSearchArea(false));
 
       // --- Main Tab Switching (Scriptures/Statistics) ---
-      function switchTab(tabName) { /* ... (no changes) ... */
+      function switchTab(tabName) {
+          // ... (switchTab remains the same)
           console.log("Switching main tab to:", tabName);
           scripturesContent.classList.remove("active");
           statisticsContent.classList.remove("active");
@@ -879,7 +786,6 @@
               if (!statsTabButton.disabled) {
                   statisticsContent.classList.add("active");
                   statsTabButton.classList.add("active");
-                  // Trigger N-gram tab switch (which now renders chart/tables/clouds for the current N-gram size)
                   switchNgramTab(`${currentNgramSize}gram`);
               } else {
                   console.warn("Attempted to switch to disabled stats tab. Staying on scriptures tab.");
@@ -892,9 +798,10 @@
       statsTabButton.addEventListener("click", () => switchTab("statistics"));
 
       // --- N-gram Tab Switching (within Statistics) ---
-      function switchNgramTab(targetTab) { /* ... (no changes) ... */ // targetTab is like "1gram", "2gram", "3gram"
+      function switchNgramTab(targetTab) { // targetTab is like "1gram", "2gram", "3gram"
+          // ... (switchNgramTab remains the same)
           console.log("Switching N-gram tab to:", targetTab);
-          currentNgramSize = parseInt(targetTab.replace('gram', ''), 10); // Update global tracker
+          currentNgramSize = parseInt(targetTab.replace('gram', ''), 10); 
 
           ngramTabContents.forEach(content => content.classList.remove('active'));
           ngramTabButtons.forEach(button => button.classList.remove('active'));
@@ -905,25 +812,18 @@
           if(activeContent) activeContent.classList.add('active');
           if(activeButton) activeButton.classList.add('active');
 
-          // Render charts/tables/clouds if the main statistics tab is active
           if (statisticsContent.classList.contains('active')) {
-              // Render Volume Chart (if data exists) - Always render this regardless of N-gram tab
               if (currentVolumeChartData) {
                   renderVolumeChart(currentVolumeChartData);
               } else {
                   statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">Perform a search to generate volume chart.</p>';
               }
-
-              // Render the frequency table for the current n-gram size
               renderFrequencyTable();
-
-              // Render the word cloud for the current n-gram size
               const cloudContainerId = `wordCloudContainer${currentNgramSize}gram`;
               if (document.getElementById(cloudContainerId)) {
                  renderWordCloud(currentNgramSize);
               } else {
                  console.log(`No word cloud container found for ${currentNgramSize}-gram.`);
-                 // Ensure placeholder is shown if container exists but no data
                  const container = document.getElementById(cloudContainerId);
                  if(container) {
                     container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${currentNgramSize === 1 ? 'word' : currentNgramSize === 2 ? 'phrase' : 'triplet'} cloud.</p>`;
@@ -939,19 +839,17 @@
 
       // --- Stop Words Checkbox Handler ---
       excludeStopWordsCheckbox.addEventListener('change', () => {
+          // ... (excludeStopWordsCheckbox handler remains the same)
           console.log("Exclude Stop Words checkbox changed:", excludeStopWordsCheckbox.checked);
-          // Only recalculate if statistics are currently enabled (i.e., a search has been performed)
           if (!statsTabButton.disabled && scriptureCache.currentResults.length > 0) {
               console.log("Recalculating statistics due to stop word toggle change...");
               try {
-                  // Re-calculate stats using the stored results and the new checkbox state
                   calculateAndDisplayStatistics(
                       scriptureCache.currentResults,
                       scriptureCache.currentResults.length,
-                      searchInput.value.trim(), // Pass original search term again
-                      regexSearchCheckbox.checked // Pass regex flag again
+                      searchInput.value.trim(), 
+                      regexSearchCheckbox.checked 
                   );
-                  // Re-render the currently selected N-gram tab view
                   switchNgramTab(`${currentNgramSize}gram`);
               } catch (error) {
                   console.error("Error recalculating statistics after stop word toggle:", error);
@@ -965,8 +863,9 @@
 
 
       // --- Search Logic ---
-      function getSelectedVolumes() { /* ... (no changes) ... */ return volumeCheckboxElements.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value); }
-      async function performSearch() { /* ... (no changes) ... */
+      function getSelectedVolumes() { return volumeCheckboxElements.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value); }
+      async function performSearch() {
+          // ... (performSearch remains largely the same, with minor logging adjustments)
           console.log("--- Starting Search ---");
           if (firstSearchPerformed) { console.log("Collapsing advanced options after subsequent search."); toggleAdvancedSearchArea(true); }
           else { console.log("First search, not collapsing advanced options yet."); }
@@ -975,57 +874,50 @@
           resultsContainer.innerHTML = ""; noResultsMessage.classList.add("hidden"); clearStatisticsDisplay(); statsTabButton.disabled = true;
           statsError.classList.add('hidden'); statsError.textContent = '';
           fallbackMessage.textContent = "";
-          scriptureCache.currentResults = []; // Clear stored results
-          switchTab("scriptures"); // Always switch back to scriptures tab on new search
+          scriptureCache.currentResults = []; 
+          switchTab("scriptures"); 
 
-          let searchTerm = searchInput.value.trim(); const originalSearchTerm = searchTerm; // Keep original for stats
+          let searchTerm = searchInput.value.trim(); const originalSearchTerm = searchTerm; 
           const verseTitleFilterTerm = verseTitleFilterInput.value.trim();
           const selectedVolumes = getSelectedVolumes(); let useRegex = regexSearchCheckbox.checked; const isCaseSensitive = caseSensitiveCheckbox.checked;
           const shouldDisplayColumns = columnsByVolumeCheckbox.checked; const shouldShuffle = shuffleResultsCheckbox.checked; let wasAutoConverted = false;
 
-          if (selectedVolumes.length === 0) { /* ... (volume validation) ... */ console.log("Search stopped: No volumes selected."); resultsContainer.className = ""; resultsHeadingText.textContent = "Results"; scripturesTabCount.textContent = "0"; noResultsMessage.textContent = "Please select at least one volume to search."; noResultsMessage.classList.remove("hidden"); loadingIndicator.classList.add("hidden"); return; }
+          if (selectedVolumes.length === 0) { console.log("Search stopped: No volumes selected."); resultsContainer.className = ""; resultsHeadingText.textContent = "Results"; scripturesTabCount.textContent = "0"; noResultsMessage.textContent = "Please select at least one volume to search."; noResultsMessage.classList.remove("hidden"); loadingIndicator.classList.add("hidden"); return; }
           console.log("Selected Volumes:", selectedVolumes);
-
-          // --- Regex Pre-processing & Validation ---
+          
           let generatedRegexString = null; if (!useRegex && searchTerm) { const andMatch = searchTerm.match(/^(.*?)\s+AND\s+(.*?)$/i); const orMatch = searchTerm.match(/^(.*?)\s+OR\s+(.*?)$/i); if (andMatch) { const term1 = escapeRegex(andMatch[1].trim()); const term2 = escapeRegex(andMatch[2].trim()); generatedRegexString = `(${term1}.*?${term2}|${term2}.*?${term1})`; useRegex = true; wasAutoConverted = true; console.log("AND detected, using regex:", generatedRegexString); } else if (orMatch) { const term1 = escapeRegex(orMatch[1].trim()); const term2 = escapeRegex(orMatch[2].trim()); generatedRegexString = `(${term1}|${term2})`; useRegex = true; wasAutoConverted = true; console.log("OR detected, using regex:", generatedRegexString); } }
           let mainSearchRegex = null; if (useRegex && (searchTerm || generatedRegexString)) { try { const pattern = generatedRegexString || searchTerm; if (!pattern) throw new Error("Regex pattern is empty."); mainSearchRegex = new RegExp(pattern, isCaseSensitive ? "g" : "gi"); console.log("Main search regex compiled:", mainSearchRegex); } catch (e) { console.error("Invalid main search regex:", e); searchInputError.textContent = `Invalid Regex: ${e.message}`; return; } }
           let verseTitleRegex = null; if (verseTitleFilterTerm) { try { verseTitleRegex = new RegExp(verseTitleFilterTerm, "i"); console.log("Verse title regex compiled:", verseTitleRegex); } catch (e) { console.error("Invalid verse title regex:", e); verseTitleFilterError.textContent = `Invalid Regex: ${e.message}`; return; } }
-          // --- End Regex Pre-processing ---
-
+          
           loadingIndicator.classList.remove("hidden"); resultsContainer.className = shouldDisplayColumns ? "results-flex-container" : "results-grid-container";
           let results = [];
           try {
               const data = await fetchScriptureData();
-              if (!Array.isArray(data) || data.length === 0) { /* ... (data validation) ... */ console.error("performSearch cannot proceed: Invalid or empty data received from fetchScriptureData."); if (!scripturesContent.querySelector(".bg-red-100")) { resultsHeadingText.textContent = "Results"; scripturesTabCount.textContent = "0"; noResultsMessage.textContent = "No scripture data is available to search."; noResultsMessage.classList.remove("hidden"); } loadingIndicator.classList.add("hidden"); return; }
+              if (!Array.isArray(data) || data.length === 0) { console.error("performSearch cannot proceed: Invalid or empty data received from fetchScriptureData."); if (!scripturesContent.querySelector(".bg-red-100")) { resultsHeadingText.textContent = "Results"; scripturesTabCount.textContent = "0"; noResultsMessage.textContent = "No scripture data is available to search."; noResultsMessage.classList.remove("hidden"); } loadingIndicator.classList.add("hidden"); return; }
               console.log(`Processing ${data.length} scripture entries (real or fallback).`);
 
-              // --- Filtering Logic ---
               console.log("Filtering by volume..."); let filteredData = data; const volumesSet = new Set(selectedVolumes); filteredData = filteredData.filter((verse) => verse && typeof verse.volume_title === "string" && volumesSet.has(verse.volume_title)); console.log(`After volume filter: ${filteredData.length} entries.`);
               console.log("Filtering by search term:", originalSearchTerm, "Use regex:", useRegex); if (searchTerm || generatedRegexString) { if (useRegex && mainSearchRegex) { results = filteredData.filter((verse) => verse && typeof verse.scripture_text === "string" && mainSearchRegex.test(verse.scripture_text)); if (mainSearchRegex.global) mainSearchRegex.lastIndex = 0; } else if (!useRegex && searchTerm) { const finalSearchTerm = isCaseSensitive ? searchTerm : searchTerm.toLowerCase(); results = filteredData.filter((verse) => { const text = verse && typeof verse.scripture_text === "string" ? (isCaseSensitive ? verse.scripture_text : verse.scripture_text.toLowerCase()) : ""; return text.includes(finalSearchTerm); }); } else { results = filteredData; } } else { results = filteredData; } console.log(`After search term filter: ${results.length} entries.`);
               if (verseTitleRegex) { console.log("Filtering by verse title regex:", verseTitleRegex); results = results.filter((verse) => verse && typeof verse.verse_title === "string" && verseTitleRegex.test(verse.verse_title)); if (verseTitleRegex.global) verseTitleRegex.lastIndex = 0; console.log(`After verse title filter: ${results.length} entries.`); }
-              // --- End Filtering Logic ---
-
-              // **MODIFIED: Store results for potential recalculation**
+              
               scriptureCache.currentResults = results;
 
-              if (shouldShuffle && results.length > 0) { /* ... (shuffle) ... */ console.log("Shuffling results..."); shuffleArray(results); }
+              if (shouldShuffle && results.length > 0) { console.log("Shuffling results..."); shuffleArray(results); }
 
-              // --- Search Status Text ---
               let statusParts = []; if (originalSearchTerm) { statusParts.push(`Searching for "${originalSearchTerm}"`); if (useRegex) statusParts.push(`using ${wasAutoConverted ? "auto-converted " : ""}regex`); else statusParts.push(`as exact phrase`); statusParts.push(isCaseSensitive ? "(case-sensitive)" : "(case-insensitive)"); } else { statusParts.push("Showing all verses"); } if (verseTitleFilterTerm) statusParts.push(`filtering titles by regex "${verseTitleFilterTerm}"`); if (selectedVolumes.length < allAvailableVolumes.length) statusParts.push(`in selected volumes`); else statusParts.push(`in all volumes`); searchStatus.textContent = statusParts.join(", ") + "."; console.log("Search Status:", searchStatus.textContent);
-              // --- End Search Status Text ---
-
+              
               const resultCount = results.length;
               resultsHeadingText.textContent = `Scriptures (${resultCount > RESULT_RENDER_LIMIT ? '>' + RESULT_RENDER_LIMIT : resultCount})`;
               scripturesTabCount.textContent = resultCount > RESULT_RENDER_LIMIT ? `>${RESULT_RENDER_LIMIT}` : resultCount;
 
-              if (resultCount > RESULT_RENDER_LIMIT) { /* ... (result limit exceeded) ... */
+              if (resultCount > RESULT_RENDER_LIMIT) {
                   console.warn(`Search returned ${resultCount} results, exceeding the limit of ${RESULT_RENDER_LIMIT}.`);
                   resultsContainer.innerHTML = "";
                   noResultsMessage.innerHTML = `<p class="text-orange-700 font-semibold">Search returned ${resultCount.toLocaleString()} results, which is more than the display limit of ${RESULT_RENDER_LIMIT.toLocaleString()}.</p><p class="text-gray-600 mt-2">Please refine your search terms or filters to narrow down the results.</p>`;
                   noResultsMessage.classList.remove("hidden");
                   statsTabButton.disabled = true;
                   clearStatisticsDisplay();
-                  scriptureCache.currentResults = []; // Clear stored results on exceed limit
+                  scriptureCache.currentResults = []; 
                   if (!firstSearchPerformed) { firstSearchPerformed = true; console.log("First search performed flag set to true (results exceeded limit)."); console.log("Collapsing advanced options after first search (results exceeded limit)."); toggleAdvancedSearchArea(true); }
               } else if (resultCount > 0) {
                   console.log("Displaying results and calculating stats...");
@@ -1034,70 +926,190 @@
                       calculateAndDisplayStatistics(results, resultCount, originalSearchTerm, useRegex);
                       statsTabButton.disabled = false;
                       console.log("Stats tab enabled.");
-                  } catch (statsError) { /* ... (stats error handling) ... */
-                      console.error("Error during statistics calculation or rendering:", statsError);
+                  } catch (statsErrorCaught) { 
+                      console.error("Error during statistics calculation or rendering:", statsErrorCaught);
                       statsTabButton.disabled = true;
                       clearStatisticsDisplay();
-                      scriptureCache.currentResults = []; // Clear stored results on error
-                      const statsErrorDiv = document.getElementById("statsError");
-                      statsErrorDiv.textContent = `An error occurred while generating statistics: ${statsError.message}. Try refining your search.`;
-                      statsErrorDiv.classList.remove('hidden');
+                      scriptureCache.currentResults = []; 
+                      statsError.textContent = `An error occurred while generating statistics: ${statsErrorCaught.message}. Try refining your search.`;
+                      statsError.classList.remove('hidden');
                   }
                   if (!firstSearchPerformed) { firstSearchPerformed = true; console.log("First search performed flag set to true."); console.log("Collapsing advanced options after first search display."); toggleAdvancedSearchArea(true); }
-              } else { /* ... (handle 0 results) ... */
+              } else { 
                   console.log("No matches found for criteria."); resultsContainer.className = "";
                   noResultsMessage.textContent = "No matches found for your criteria.";
                   noResultsMessage.classList.remove("hidden"); statsTabButton.disabled = true;
                   clearStatisticsDisplay(); console.log("Stats tab kept disabled.");
-                  scriptureCache.currentResults = []; // Clear stored results on no match
+                  scriptureCache.currentResults = []; 
               }
-          } catch (error) { /* ... (general error handling) ... */
+          } catch (error) { 
               console.error("Error during search processing:", error); resultsContainer.className = "";
               scripturesContent.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-4xl mx-auto" role="alert"><strong class="font-bold">Search Error!</strong><span class="block sm:inline"> ${error.message}</span></div>`;
               resultsHeadingText.textContent = "Error"; scripturesTabCount.textContent = "!"; searchStatus.textContent = "Search failed due to an error.";
               noResultsMessage.classList.add("hidden"); statsTabButton.disabled = true; clearStatisticsDisplay();
-              scriptureCache.currentResults = []; // Clear stored results on error
+              scriptureCache.currentResults = []; 
           } finally { loadingIndicator.classList.add("hidden"); console.log("--- Search Finished ---"); }
       }
 
       // --- Display Logic ---
-      function createResultCard(verse, searchTerm, isCaseSensitive) { /* ... (no changes) ... */
-           const card = document.createElement("div"); card.className = "result-card";
-           const scriptureText = verse?.scripture_text ?? "[Scripture text missing]"; const verseTitle = verse?.verse_title ?? "[Verse title missing]";
-           const bookTitle = verse?.book_title ?? "[Book missing]"; const chapterNum = verse?.chapter_number ?? "?"; const verseNum = verse?.verse_number ?? "?";
-           let highlightedText = scriptureText; if (searchTerm && scriptureText !== "[Scripture text missing]") { try { let highlightPattern = searchTerm; let highlightFlags = isCaseSensitive ? "g" : "gi"; if (!regexSearchCheckbox.checked) { highlightPattern = escapeRegex(searchTerm); } const regex = new RegExp(highlightPattern, highlightFlags); highlightedText = scriptureText.replace(regex, (match) => `<span class="highlight">${match}</span>`); } catch (e) { console.warn(`Regex error during highlighting for term "${searchTerm}":`, e); highlightedText = scriptureText; } }
+      function createResultCard(verse, searchTerm, isCaseSensitive, isForContextDrawer = false) {
+           const card = document.createElement("div");
+           card.className = "result-card"; // Base class for all cards
+
+           const scriptureText = verse?.scripture_text ?? "[Scripture text missing]";
+           const verseTitle = verse?.verse_title ?? "[Verse title missing]";
+           const bookTitle = verse?.book_title ?? "[Book missing]";
+           const chapterNum = verse?.chapter_number ?? "?";
+           const verseNum = verse?.verse_number ?? "?";
+
+           let highlightedText = scriptureText;
+           // Only highlight search term if it's provided and not for context drawer cards (where searchTerm is null)
+           if (searchTerm && scriptureText !== "[Scripture text missing]") {
+               try {
+                   let highlightPattern = searchTerm;
+                   let highlightFlags = isCaseSensitive ? "g" : "gi";
+                   if (!regexSearchCheckbox.checked) { 
+                       highlightPattern = escapeRegex(searchTerm);
+                   }
+                   const regex = new RegExp(highlightPattern, highlightFlags);
+                   highlightedText = scriptureText.replace(regex, (match) => `<span class="highlight">${match}</span>`);
+               } catch (e) {
+                   console.warn(`Regex error during highlighting for term "${searchTerm}":`, e);
+                   highlightedText = scriptureText; 
+               }
+           }
+
            const copyData = `> ${scriptureText} (${verseTitle})`;
-           card.innerHTML = ` <button class="copy-button" title="Copy scripture" data-copy="${escape(copyData)}">Copy</button> <div> <div class="flex justify-between items-start mb-2"> <h3 class="font-semibold text-sm text-blue-900 mr-12">${verseTitle}</h3> </div> <p class="text-sm text-gray-800 mb-2">${highlightedText}</p> </div> <div class="mt-auto text-xs text-gray-500 pt-2 border-t border-gray-100"> <a href="https://www.churchofjesuschrist.org/search?facet=all&lang=eng&query=${encodeURIComponent(bookTitle)}+${chapterNum}%3A${verseNum}" target="_blank" class="hover:text-blue-600">🔗 View on Church Website</a> </div> `; return card;
+
+           const headingElement = document.createElement("h3");
+           // Basic styling for the heading, common to both main results and context drawer cards
+           headingElement.className = "scripture-title-heading font-semibold text-sm text-blue-900 mr-12"; 
+           headingElement.textContent = verseTitle;
+
+           if (!isForContextDrawer) {
+               // Add specific class and event listener for main search result cards
+               headingElement.classList.add("clickable-heading"); 
+               headingElement.title = "Click to view context"; // Tooltip
+               headingElement.addEventListener('click', () => openContextDrawer(verse));
+           }
+           // For cards in the context drawer, the heading is not clickable to open another drawer.
+
+           card.innerHTML = `
+               <button class="copy-button" title="Copy scripture" data-copy="${escape(copyData)}">Copy</button>
+               <div>
+                   <div class="flex justify-between items-start mb-2">
+                       </div>
+                   <p class="text-sm text-gray-800 mb-2">${highlightedText}</p>
+               </div>
+               <div class="mt-auto text-xs text-gray-500 pt-2 border-t border-gray-100">
+                   <a href="https://www.churchofjesuschrist.org/search?facet=all&lang=eng&query=${encodeURIComponent(bookTitle)}+${chapterNum}%3A${verseNum}" target="_blank" class="hover:text-blue-600">🔗 View on Church Website</a>
+               </div>
+           `;
+           card.querySelector('.flex.justify-between.items-start.mb-2').prepend(headingElement);
+           return card;
        }
-      function displayResults(results, searchTerm, isCaseSensitive, displayColumns) { /* ... (no changes) ... */
-           resultsContainer.innerHTML = ""; resultsContainer.className = displayColumns ? "results-flex-container" : "results-grid-container"; noResultsMessage.classList.add("hidden");
-           if (displayColumns) { const resultsByVolume = results.reduce((acc, verse) => { if (verse && typeof verse.volume_title === "string") { const volume = verse.volume_title; if (!acc[volume]) acc[volume] = []; acc[volume].push(verse); } return acc; }, {}); const createVolumeColumn = (volumeName, verses) => { const columnDiv = document.createElement("div"); columnDiv.className = "volume-column"; const headerArea = document.createElement("div"); headerArea.className = "volume-column-header-area"; const header = document.createElement("h3"); header.textContent = volumeName; header.className = "volume-column-header"; headerArea.appendChild(header); const subheader = document.createElement("div"); subheader.textContent = `${verses.length} scripture${verses.length !== 1 ? "s" : ""}`; subheader.className = "volume-column-subheader"; headerArea.appendChild(subheader); columnDiv.appendChild(headerArea); const contentDiv = document.createElement("div"); contentDiv.className = "volume-column-content"; verses.forEach((verse) => { const card = createResultCard(verse, searchTerm, isCaseSensitive); contentDiv.appendChild(card); }); columnDiv.appendChild(contentDiv); return columnDiv; }; HARDCODED_VOLUME_ORDER.forEach((volumeName) => { if (resultsByVolume[volumeName]?.length > 0) { const column = createVolumeColumn(volumeName, resultsByVolume[volumeName]); resultsContainer.appendChild(column); delete resultsByVolume[volumeName]; } }); Object.keys(resultsByVolume).sort().forEach((volumeName) => { if (resultsByVolume[volumeName].length > 0) { const column = createVolumeColumn(volumeName, resultsByVolume[volumeName]); resultsContainer.appendChild(column); } }); } else { results.forEach((verse) => { const card = createResultCard(verse, searchTerm, isCaseSensitive); resultsContainer.appendChild(card); }); }
+      function displayResults(results, searchTerm, isCaseSensitive, displayColumns) {
+           resultsContainer.innerHTML = ""; 
+           resultsContainer.className = displayColumns ? "results-flex-container" : "results-grid-container"; 
+           noResultsMessage.classList.add("hidden");
+           
+           if (displayColumns) { 
+               const resultsByVolume = results.reduce((acc, verse) => { if (verse && typeof verse.volume_title === "string") { const volume = verse.volume_title; if (!acc[volume]) acc[volume] = []; acc[volume].push(verse); } return acc; }, {}); 
+               const createVolumeColumn = (volumeName, verses) => { const columnDiv = document.createElement("div"); columnDiv.className = "volume-column"; const headerArea = document.createElement("div"); headerArea.className = "volume-column-header-area"; const header = document.createElement("h3"); header.textContent = volumeName; header.className = "volume-column-header"; headerArea.appendChild(header); const subheader = document.createElement("div"); subheader.textContent = `${verses.length} scripture${verses.length !== 1 ? "s" : ""}`; subheader.className = "volume-column-subheader"; headerArea.appendChild(subheader); columnDiv.appendChild(headerArea); const contentDiv = document.createElement("div"); contentDiv.className = "volume-column-content"; verses.forEach((verse) => { const card = createResultCard(verse, searchTerm, isCaseSensitive, false); contentDiv.appendChild(card); }); columnDiv.appendChild(contentDiv); return columnDiv; }; 
+               HARDCODED_VOLUME_ORDER.forEach((volumeName) => { if (resultsByVolume[volumeName]?.length > 0) { const column = createVolumeColumn(volumeName, resultsByVolume[volumeName]); resultsContainer.appendChild(column); delete resultsByVolume[volumeName]; } }); 
+               Object.keys(resultsByVolume).sort().forEach((volumeName) => { if (resultsByVolume[volumeName].length > 0) { const column = createVolumeColumn(volumeName, resultsByVolume[volumeName]); resultsContainer.appendChild(column); } }); 
+           } else { 
+               results.forEach((verse) => { const card = createResultCard(verse, searchTerm, isCaseSensitive, false); resultsContainer.appendChild(card); }); 
+           }
        }
 
+      // --- Context Drawer Logic ---
+      function openContextDrawer(clickedVerse) {
+          console.log("Opening context drawer for:", clickedVerse);
+          if (!scriptureCache.lds || scriptureCache.lds.length === 0) {
+              contextDrawerTitle.textContent = "Error";
+              contextDrawerContent.innerHTML = '<p class="text-center text-red-500">Scripture data not loaded. Cannot display context.</p>';
+              openModal(contextDrawerOverlay);
+              return;
+          }
+
+          contextDrawerTitle.textContent = `${clickedVerse.book_title} - Chapter ${clickedVerse.chapter_number}`;
+          contextDrawerContent.innerHTML = '<p class="text-center text-gray-500">Loading context...</p>'; 
+
+          const chapterVerses = scriptureCache.lds.filter(
+              v => v.book_title === clickedVerse.book_title && v.chapter_number === clickedVerse.chapter_number
+          ).sort((a, b) => a.verse_number - b.verse_number); 
+
+          if (chapterVerses.length === 0) {
+              contextDrawerContent.innerHTML = '<p class="text-center text-gray-500">No verses found for this chapter.</p>';
+              openModal(contextDrawerOverlay);
+              return;
+          }
+
+          const clickedVerseIndex = chapterVerses.findIndex(v => v.verse_number === clickedVerse.verse_number);
+
+          if (clickedVerseIndex === -1) {
+              contextDrawerContent.innerHTML = '<p class="text-center text-red-500">Clicked verse not found in chapter data.</p>';
+              openModal(contextDrawerOverlay);
+              return;
+          }
+
+          const startIndex = Math.max(0, clickedVerseIndex - CONTEXT_VERSE_RANGE);
+          const endIndex = Math.min(chapterVerses.length, clickedVerseIndex + CONTEXT_VERSE_RANGE + 1);
+          const versesToShow = chapterVerses.slice(startIndex, endIndex);
+
+          contextDrawerContent.innerHTML = ""; // Clear loading message
+          let currentVerseElement = null;
+
+          versesToShow.forEach(verse => {
+              // Create a card using the updated createResultCard function, indicating it's for the context drawer
+              const cardElement = createResultCard(verse, null, false, true); // searchTerm is null, isForContextDrawer is true
+
+              if (verse.verse_number === clickedVerse.verse_number) {
+                  cardElement.classList.add('current-context-verse');
+                  cardElement.id = `context-verse-${verse.verse_number}`; 
+                  currentVerseElement = cardElement;
+              }
+              contextDrawerContent.appendChild(cardElement);
+          });
+          
+          if (versesToShow.length === 0) {
+             contextDrawerContent.innerHTML = '<p class="text-center text-gray-500">No surrounding verses to display.</p>';
+          }
+
+          openModal(contextDrawerOverlay);
+
+          if (currentVerseElement) {
+              setTimeout(() => { 
+                  currentVerseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 100); 
+          }
+      }
+
+
       // --- N-gram Calculation ---
-      function calculateNGrams(results, n, excludeStopWords) { /* ... (no changes) ... */
+      function calculateNGrams(results, n, excludeStopWords) {
+          // ... (calculateNGrams remains the same)
           console.log(`Calculating ${n}-grams... (Exclude Stop Words: ${excludeStopWords})`);
           const ngramCounts = {};
           const ngramUniqueCounts = {};
 
           results.forEach((verse) => {
               const text = verse.scripture_text || "";
-              // Tokenize and normalize words
               const normalizedWords = text.split(/\s+/)
                                           .map(normalizeWord)
-                                          .filter(word => word); // Remove empty strings
+                                          .filter(word => word); 
 
-              // Filter stop words based on the flag
               const wordsToUse = excludeStopWords
                   ? normalizedWords.filter(word => !STOP_WORDS.has(word))
                   : normalizedWords;
 
-              const itemsInThisVerse = new Set(); // Can be words or phrases
+              const itemsInThisVerse = new Set(); 
 
               if (wordsToUse.length >= n) {
                   for (let i = 0; i <= wordsToUse.length - n; i++) {
                       const item = wordsToUse.slice(i, i + n).join(" ");
-                      if (item.trim()) { // Ensure item is not empty
+                      if (item.trim()) { 
                           ngramCounts[item] = (ngramCounts[item] || 0) + 1;
                           if (!itemsInThisVerse.has(item)) {
                               ngramUniqueCounts[item] = (ngramUniqueCounts[item] || 0) + 1;
@@ -1122,7 +1134,8 @@
 
 
       // --- Statistics Calculation and Display ---
-      function calculateAndDisplayStatistics(results, totalScripturesMatched, originalSearchTerm, useRegex) { /* ... (no changes) ... */
+      function calculateAndDisplayStatistics(results, totalScripturesMatched, originalSearchTerm, useRegex) {
+         // ... (calculateAndDisplayStatistics remains the same)
          console.log("Calculating statistics for", totalScripturesMatched, "results.");
          statsError.classList.add('hidden'); statsError.textContent = '';
          currentVolumeChartData = null;
@@ -1134,16 +1147,15 @@
          console.log("Stop word exclusion setting:", shouldExcludeStopWords);
 
          const volumeCounts = {};
-         let totalWordsCounted = 0; // Total words counted (respecting stop words setting)
-         const wordTotalCounts = {}; // Counts for individual words (respecting stop words setting)
-         const wordUniqueCounts = {}; // Unique verses per individual word (respecting stop words setting)
-         const wordFormsCounts = {}; // Counts for variations of the search term (always includes stop words if applicable)
+         let totalWordsCounted = 0; 
+         const wordTotalCounts = {}; 
+         const wordUniqueCounts = {}; 
+         const wordFormsCounts = {}; 
 
          const calculateWordForms = !useRegex && originalSearchTerm && !originalSearchTerm.includes(' ') && !originalSearchTerm.match(/\s+(AND|OR)\s+/i);
          const normalizedSearchTermPrefix = calculateWordForms ? normalizeWord(originalSearchTerm) : null;
          console.log("Calculate Word Forms:", calculateWordForms, "Prefix:", normalizedSearchTermPrefix);
-
-         // --- Calculate Volume Counts, Word Counts (respecting stop words), and Word Forms ---
+ 
          results.forEach((verse) => {
              const volume = verse.volume_title || "Unknown Volume";
              volumeCounts[volume] = (volumeCounts[volume] || 0) + 1;
@@ -1154,7 +1166,7 @@
 
              words.forEach((rawWord) => {
                  const word = normalizeWord(rawWord);
-                 if (word) { // Process only non-empty normalized words
+                 if (word) { 
                      const countThisWord = !shouldExcludeStopWords || !STOP_WORDS.has(word);
 
                      if (countThisWord) {
@@ -1175,26 +1187,22 @@
          console.log("Total words counted (respecting stop words):", totalWordsCounted);
          console.log("Word Forms Counts:", wordFormsCounts);
 
-         // --- Process 1-gram data for the table (based on potentially filtered counts) ---
          currentFrequencyData[1] = Object.keys(wordTotalCounts).map((word) => {
              const total = wordTotalCounts[word];
              const unique = wordUniqueCounts[word] || 0;
              const freqPerScripture = totalScripturesMatched > 0 ? total / totalScripturesMatched : 0;
-             const freqPerWord = totalWordsCounted > 0 ? total / totalWordsCounted : 0; // Use totalWordsCounted
+             const freqPerWord = totalWordsCounted > 0 ? total / totalWordsCounted : 0; 
              const coverage = totalScripturesMatched > 0 ? unique / totalScripturesMatched : 0;
              return { word: word, total: total, unique: unique, freqPerScripture: freqPerScripture, freqPerWord: freqPerWord, coverage: coverage };
          }).sort((a, b) => b.total - a.total);
          console.log("1-gram frequency data calculated:", currentFrequencyData[1].length, "unique words found.");
 
-         // --- Calculate 2-grams and 3-grams (pass stop word setting) ---
          currentFrequencyData[2] = calculateNGrams(results, 2, shouldExcludeStopWords);
          currentFrequencyData[3] = calculateNGrams(results, 3, shouldExcludeStopWords);
-
-         // --- Populate Stats Summary and Word Forms ---
+ 
          statsTotalCount.textContent = totalScripturesMatched;
          renderWordFormsBreakdown(wordFormsCounts, calculateWordForms);
-
-         // --- Prepare and Store Volume Chart Data ---
+ 
          const volumeChartDataSource = HARDCODED_VOLUME_ORDER.map(volume => ({
              volume: volume,
              count: volumeCounts[volume] || 0
@@ -1211,17 +1219,16 @@
       }
 
       // --- D3 Volume Chart Rendering ---
-      function renderVolumeChart(data) { /* ... (no changes) ... */
-          // Added check for data validity
+      function renderVolumeChart(data) {
+          // ... (renderVolumeChart remains the same)
           if (!data || data.length === 0) {
               console.log("renderVolumeChart called with no data. Displaying placeholder.");
               statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">No volume data to display.</p>';
               return;
           }
           console.log("Rendering volume chart with data:", data);
-          statsVolumeChartContainer.innerHTML = ''; // Clear previous chart/placeholder
+          statsVolumeChartContainer.innerHTML = ''; 
 
-          // Added slight delay with setTimeout to allow DOM update
           setTimeout(() => {
               const containerWidth = statsVolumeChartContainer.clientWidth;
               if (!containerWidth) {
@@ -1231,7 +1238,7 @@
               }
               console.log("Container width for chart:", containerWidth);
 
-              const margin = { top: 10, right: 30, bottom: 20, left: 150 }; // Increased left margin for labels
+              const margin = { top: 10, right: 30, bottom: 20, left: 150 }; 
               const barHeight = 25;
               const height = data.length * barHeight + margin.top + margin.bottom;
               const width = containerWidth - margin.left - margin.right;
@@ -1282,7 +1289,7 @@
                  .attr("width", 0)
                  .transition()
                  .duration(500)
-                 .attr("width", d => Math.max(0, xScale(d.count))); // Ensure width is not negative
+                 .attr("width", d => Math.max(0, xScale(d.count))); 
 
               svg.selectAll(".bar-label")
                   .data(data)
@@ -1290,24 +1297,24 @@
                   .append("text")
                   .attr("class", "bar-label")
                   .attr("y", d => yScale(d.volume) + yScale.bandwidth() / 2)
-                  .attr("x", d => Math.max(0, xScale(d.count)) + 5) // Position label after bar, ensure positive x
+                  .attr("x", d => Math.max(0, xScale(d.count)) + 5) 
                   .text(d => d.count);
 
               console.log("Volume chart rendered.");
-          }, 50); // 50ms delay
+          }, 50); 
       }
-      // Helper function to wrap long axis labels (optional)
-      function wrapAxisText(text, width) { /* ... (no changes) ... */
+      function wrapAxisText(text, width) {
+          // ... (wrapAxisText remains the same)
           text.each(function() {
               const text = d3.select(this);
               const words = text.text().split(/\s+/).reverse();
               let word;
               let line = [];
               let lineNumber = 0;
-              const lineHeight = 1.1; // ems
+              const lineHeight = 1.1; 
               const y = text.attr("y");
               const dy = parseFloat(text.attr("dy") || 0);
-              let tspan = text.text(null).append("tspan").attr("x", -10).attr("y", y).attr("dy", dy + "em"); // Adjust x for left axis
+              let tspan = text.text(null).append("tspan").attr("x", -10).attr("y", y).attr("dy", dy + "em"); 
               while (word = words.pop()) {
                   line.push(word);
                   tspan.text(line.join(" "));
@@ -1315,17 +1322,17 @@
                       line.pop();
                       tspan.text(line.join(" "));
                       line = [word];
-                      tspan = text.append("tspan").attr("x", -10).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word); // Adjust x
+                      tspan = text.append("tspan").attr("x", -10).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word); 
                   }
               }
           });
       }
 
-
       // --- Word Forms Breakdown Rendering ---
-      function renderWordFormsBreakdown(formsData, wasSingleWordSearch) { /* ... (no changes) ... */
+      function renderWordFormsBreakdown(formsData, wasSingleWordSearch) {
+          // ... (renderWordFormsBreakdown remains the same)
           console.log("Rendering word forms breakdown:", formsData);
-          statsWordFormsList.innerHTML = ''; // Clear previous list
+          statsWordFormsList.innerHTML = ''; 
 
           if (!wasSingleWordSearch) {
               statsWordFormsPlaceholder.textContent = "Perform a non-regex, single-word search to see breakdown.";
@@ -1335,7 +1342,7 @@
           }
 
           const formsArray = Object.entries(formsData)
-                                 .sort(([, countA], [, countB]) => countB - countA); // Sort by count desc
+                                 .sort(([, countA], [, countB]) => countB - countA); 
 
           if (formsArray.length === 0) {
               statsWordFormsPlaceholder.textContent = "No variations of the search term found in results.";
@@ -1357,21 +1364,20 @@
           }
       }
 
-
       // --- Word Cloud Rendering ---
-       function renderWordCloud(ngramSize) { /* ... (no changes) ... */
+       function renderWordCloud(ngramSize) {
+           // ... (renderWordCloud remains the same)
            console.log(`Rendering word cloud for ${ngramSize}-gram...`);
            const containerId = `wordCloudContainer${ngramSize}gram`;
            const cloudContainer = document.getElementById(containerId);
            if (!cloudContainer) { console.warn(`Word cloud container ${containerId} not found.`); return; }
 
            const statusElement = cloudContainer.querySelector('.wordCloudStatus');
-           cloudContainer.innerHTML = ''; // Clear previous content
+           cloudContainer.innerHTML = ''; 
            if (statusElement) {
                statusElement.textContent = "Generating word cloud...";
-               cloudContainer.appendChild(statusElement); // Re-add status element
+               cloudContainer.appendChild(statusElement); 
            } else {
-               // If status element wasn't found (e.g., first render), create it
                const newStatus = document.createElement('p');
                newStatus.className = 'wordCloudStatus text-center text-gray-500 p-4';
                newStatus.textContent = "Generating word cloud...";
@@ -1398,8 +1404,8 @@
                wordCloudLayout = d3.layout.cloud()
                    .size([containerWidth, containerHeight])
                    .words(wordData)
-                   .padding(ngramSize === 1 ? 5 : ngramSize === 2 ? 3 : 2) // Adjust padding
-                   .rotate(() => (ngramSize === 1 && Math.random() > 0.7 ? 90 : 0)) // Only rotate words (n=1)
+                   .padding(ngramSize === 1 ? 5 : ngramSize === 2 ? 3 : 2) 
+                   .rotate(() => (ngramSize === 1 && Math.random() > 0.7 ? 90 : 0)) 
                    .font("sans-serif")
                    .fontSize(d => d.size)
                    .on("end", (words) => drawWordCloud(words, ngramSize, containerId, containerWidth, containerHeight));
@@ -1410,11 +1416,12 @@
                if(currentStatus) currentStatus.textContent = `Error generating ${ngramSize === 1 ? 'word' : ngramSize === 2 ? 'phrase' : 'triplet'} cloud layout.`;
            }
        }
-       function drawWordCloud(words, ngramSize, containerId, width, height) { /* ... (no changes) ... */
+       function drawWordCloud(words, ngramSize, containerId, width, height) {
+           // ... (drawWordCloud remains the same)
            console.log(`Drawing ${ngramSize}-gram word cloud SVG in ${containerId}...`);
            const cloudContainer = document.getElementById(containerId);
            if (!cloudContainer) { console.warn(`Word cloud container ${containerId} not found during draw.`); return; }
-           cloudContainer.innerHTML = ''; // Clear status message before drawing
+           cloudContainer.innerHTML = ''; 
            try {
                const svg = d3.select(`#${containerId}`).append("svg")
                    .attr("width", width)
@@ -1432,13 +1439,12 @@
                    .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
                    .text(d => d.text)
                    .attr("class", "word-cloud-word")
-                   // Only add click handler for 1-grams (words)
                    .on("click", ngramSize === 1 ? (event, d) => {
                        console.log(`${ngramSize}-gram clicked:`, d.text);
-                       searchInput.value = d.text; // Set search input to the clicked word
-                       regexSearchCheckbox.checked = false; // Turn off regex for word search
-                       performSearch(); // Trigger a new search
-                   } : null); // No click handler for n > 1
+                       searchInput.value = d.text; 
+                       regexSearchCheckbox.checked = false; 
+                       performSearch(); 
+                   } : null); 
 
                console.log(`${ngramSize}-gram word cloud drawn.`);
            } catch (error) {
@@ -1447,9 +1453,9 @@
            }
        }
 
-
       // --- Frequency Table Rendering (Generic for N-grams) ---
-      function renderFrequencyTable() { /* ... (no changes) ... */
+      function renderFrequencyTable() {
+          // ... (renderFrequencyTable remains the same)
           console.log(`Rendering frequency table for ${currentNgramSize}-gram.`);
           const data = currentFrequencyData[currentNgramSize] || [];
           let tableBody, headers, colspan, defaultSortCol, defaultSortDir, dataKey;
@@ -1464,7 +1470,7 @@
               console.error("Unsupported N-gram size for table rendering:", currentNgramSize); return;
           }
 
-          tableBody.innerHTML = ""; // Clear previous content
+          tableBody.innerHTML = ""; 
 
           if (!headers || headers.length === 0 || !Array.from(headers).some(th => th.dataset.sort === currentSortColumn)) {
               currentSortColumn = defaultSortCol;
@@ -1478,7 +1484,7 @@
               if (currentSortColumn === "word" || (currentSortColumn === "phrase" && currentNgramSize > 1)) {
                   compareA = (compareA || "").toLowerCase();
                   compareB = (compareB || "").toLowerCase();
-              } else { // Numeric comparison for counts/stats
+              } else { 
                   compareA = Number(compareA || 0);
                   compareB = Number(compareB || 0);
               }
@@ -1504,7 +1510,7 @@
               console.log(`Populating ${currentNgramSize}-gram table with ${dataToDisplay.length} rows.`);
               dataToDisplay.forEach((item) => {
                   const row = tableBody.insertRow();
-                  row.insertCell().textContent = item[dataKey]; // Use dataKey ('word' or 'phrase')
+                  row.insertCell().textContent = item[dataKey]; 
                   row.insertCell().textContent = item.total;
                   row.insertCell().textContent = item.unique;
                   if (currentNgramSize === 1) {
@@ -1516,9 +1522,9 @@
           }
       }
 
-
       // --- Sorting Logic (Handles multiple tables) ---
-      function handleSort(column, tableType) { /* ... (no changes) ... */ // tableType is like "1gram", "2gram", "3gram"
+      function handleSort(column, tableType) { // tableType is like "1gram", "2gram", "3gram"
+          // ... (handleSort remains the same)
           console.log(`Handling sort for column: ${column} in table: ${tableType}`);
           const targetNgramSize = parseInt(tableType.replace('gram', ''), 10);
 
@@ -1533,37 +1539,34 @@
               currentSortColumn = column;
               if (['freqPerScripture', 'freqPerWord', 'coverage', 'total', 'unique'].includes(column)) {
                   currentSortDirection = 'desc';
-              } else { // 'word' or 'phrase'
+              } else { 
                   currentSortDirection = 'asc';
               }
           }
-          renderFrequencyTable(); // Re-render the currently active table with new sorting
+          renderFrequencyTable(); 
       }
       document.querySelectorAll('.stats-table th[data-sort]').forEach((th) => {
-          let tableType = '1gram'; // Default
+          let tableType = '1gram'; 
           if (th.closest('#statsBigramTable')) { tableType = '2gram'; }
-          else if (th.closest('#statsTrigramTable')) { tableType = '3gram'; } // Check for 3-gram table
+          else if (th.closest('#statsTrigramTable')) { tableType = '3gram'; } 
           th.addEventListener("click", () => handleSort(th.dataset.sort, tableType));
       });
 
-
       // --- Clear Statistics Display ---
-      function clearStatisticsDisplay() { /* ... (no changes) ... */
+      function clearStatisticsDisplay() {
+         // ... (clearStatisticsDisplay remains the same)
          console.log("Clearing statistics display.");
          statsTotalCount.textContent = "0";
-         // Clear Volume Chart and its data
          statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">Perform a search to generate volume chart.</p>';
          currentVolumeChartData = null;
-         // Clear Word Forms Breakdown
          statsWordFormsList.innerHTML = '';
          statsWordFormsPlaceholder.textContent = "Perform a non-regex, single-word search to see breakdown.";
          statsWordFormsPlaceholder.classList.remove('hidden');
          statsWordFormsList.classList.add('hidden');
 
-         // Clear tables and clouds
          statsWordTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Perform a search to see statistics.</td></tr>`;
          statsBigramTableBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 2-gram statistics.</td></tr>`;
-         if (statsTrigramTableBody) { // Check if element exists
+         if (statsTrigramTableBody) { 
              statsTrigramTableBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 3-gram statistics.</td></tr>`;
          }
          document.querySelectorAll('.wordCloudContainer').forEach(container => {
@@ -1574,23 +1577,39 @@
          currentFrequencyData = { 1: [], 2: [], 3: [] };
          document.querySelectorAll('.stats-table th[data-sort]').forEach((th) => { th.classList.remove("sorted-asc", "sorted-desc"); });
          statsError.classList.add('hidden'); statsError.textContent = '';
-         currentNgramSize = 1; // Reset to default
-         // Ensure only the 1-gram tab button looks active initially
+         currentNgramSize = 1; 
          ngramTabButtons.forEach(btn => btn.classList.remove('active'));
          ngramTabContainer.querySelector('[data-ngram-tab="1gram"]').classList.add('active');
-         // Ensure only the 1-gram content is potentially visible (though parent tab is hidden)
          ngramTabContents.forEach(content => content.classList.remove('active'));
-         document.getElementById('1gramContent')?.classList.add('active'); // Make 1gram content active by default
+         document.getElementById('1gramContent')?.classList.add('active'); 
       }
 
       // --- Copy Button Logic ---
-      document.body.addEventListener("click", async (event) => { /* ... (no changes) ... */
-           const copyButton = event.target.closest('.copy-button'); if (copyButton && (resultsContainer.contains(copyButton))) { const textToCopy = unescape(copyButton.dataset.copy); try { await navigator.clipboard.writeText(textToCopy); console.log("Text copied to clipboard:", textToCopy); copyButton.textContent = "Copied!"; copyButton.classList.add("copied"); setTimeout(() => { copyButton.textContent = "Copy"; copyButton.classList.remove("copied"); }, 1500); } catch (err) { console.error("Failed to copy text: ", err); copyButton.textContent = "Error"; setTimeout(() => { copyButton.textContent = "Copy"; }, 1500); } }
+      document.body.addEventListener("click", async (event) => {
+           // Check if the click target or its ancestor is a copy button AND if it's within resultsContainer OR contextDrawerContent
+           const copyButton = event.target.closest('.copy-button');
+           if (copyButton && (resultsContainer.contains(copyButton) || contextDrawerContent.contains(copyButton))) {
+               const textToCopy = unescape(copyButton.dataset.copy);
+               try {
+                   await navigator.clipboard.writeText(textToCopy);
+                   console.log("Text copied to clipboard:", textToCopy);
+                   copyButton.textContent = "Copied!";
+                   copyButton.classList.add("copied");
+                   setTimeout(() => {
+                       copyButton.textContent = "Copy";
+                       copyButton.classList.remove("copied");
+                   }, 1500);
+               } catch (err) {
+                   console.error("Failed to copy text: ", err);
+                   copyButton.textContent = "Error";
+                   setTimeout(() => { copyButton.textContent = "Copy"; }, 1500);
+               }
+           }
        });
 
       // --- Populate Stop Words Modal ---
       function populateStopWordsModal() {
-          stopWordsListDisplay.innerHTML = ''; // Clear previous list
+          stopWordsListDisplay.innerHTML = ''; 
           const sortedStopWords = Array.from(STOP_WORDS).sort();
           sortedStopWords.forEach(word => {
               const li = document.createElement('li');
@@ -1598,7 +1617,6 @@
               stopWordsListDisplay.appendChild(li);
           });
       }
-
 
       // --- Initial Setup ---
       document.addEventListener("DOMContentLoaded", function () {
@@ -1612,8 +1630,8 @@
           toggleAdvancedSearchArea(false);
           toggleAdvancedSearchButton.style.display = 'inline-flex';
           toggleAdvancedSearchLink.style.display = 'none';
-          clearStatisticsDisplay(); // Clear display initially and set 1-gram tab as default active
-          populateStopWordsModal(); // Populate stop words list on load
+          clearStatisticsDisplay(); 
+          populateStopWordsModal(); 
       });
     </script>
   </body>

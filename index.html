@@ -13,6 +13,7 @@
     />
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@1.2.7/build/d3.layout.cloud.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> <!-- Added Marked.js -->
 
     <style>
       /* Styles from previous version remain largely the same */
@@ -70,6 +71,7 @@
       .result-card {
         background-color: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         border: 1px solid #e5e7eb; display: flex; flex-direction: column; justify-content: space-between; position: relative;
+        padding-bottom: 2.5rem; /* Ensure space for add to journal button */
       }
       /* Clickable scripture heading in result card (for main results) */
       .result-card .scripture-title-heading.clickable-heading {
@@ -92,10 +94,10 @@
       .copy-button.copied { background-color: #10b981; color: white; }
 
       /* Scrollbar styles */
-      .results-flex-container::-webkit-scrollbar, .volume-column::-webkit-scrollbar, .modal-box::-webkit-scrollbar, #contextDrawerContent::-webkit-scrollbar { width: 8px; height: 10px; }
-      .results-flex-container::-webkit-scrollbar-track, .volume-column::-webkit-scrollbar-track, .modal-box::-webkit-scrollbar-track, #contextDrawerContent::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-      .results-flex-container::-webkit-scrollbar-thumb, .volume-column::-webkit-scrollbar-thumb, .modal-box::-webkit-scrollbar-thumb, #contextDrawerContent::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
-      .results-flex-container::-webkit-scrollbar-thumb:hover, .volume-column::-webkit-scrollbar-thumb:hover, .modal-box::-webkit-scrollbar-thumb:hover, #contextDrawerContent::-webkit-scrollbar-thumb:hover { background: #718096; }
+      .results-flex-container::-webkit-scrollbar, .volume-column::-webkit-scrollbar, .modal-box::-webkit-scrollbar, #contextDrawerContent::-webkit-scrollbar, #journalEditor::-webkit-scrollbar, #journalPreview::-webkit-scrollbar { width: 8px; height: 10px; }
+      .results-flex-container::-webkit-scrollbar-track, .volume-column::-webkit-scrollbar-track, .modal-box::-webkit-scrollbar-track, #contextDrawerContent::-webkit-scrollbar-track, #journalEditor::-webkit-scrollbar-track, #journalPreview::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+      .results-flex-container::-webkit-scrollbar-thumb, .volume-column::-webkit-scrollbar-thumb, .modal-box::-webkit-scrollbar-thumb, #contextDrawerContent::-webkit-scrollbar-thumb, #journalEditor::-webkit-scrollbar-thumb, #journalPreview::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
+      .results-flex-container::-webkit-scrollbar-thumb:hover, .volume-column::-webkit-scrollbar-thumb:hover, .modal-box::-webkit-scrollbar-thumb:hover, #contextDrawerContent::-webkit-scrollbar-thumb:hover, #journalEditor::-webkit-scrollbar-thumb:hover, #journalPreview::-webkit-scrollbar-thumb:hover { background: #718096; }
 
       /* Error message styles */
       .input-error-message { color: #dc2626; font-size: 0.875rem; margin-top: 0.25rem; }
@@ -159,7 +161,6 @@
           border-color: #a5b4fc; /* indigo-300 */
           box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06), 0 0 0 2px #c7d2fe; /* Original shadow + indigo-200 focus ring like */
       }
-      /* The .context-drawer-verse class itself is no longer needed for individual verse styling if using result-card structure */
 
 
       /* Search status style */
@@ -242,6 +243,40 @@
           font-weight: bold; margin-left: 4px; cursor: help; vertical-align: middle;
           position: relative; top: -1px;
       }
+
+      /* Journal Styles */
+      #journalEditor { 
+        min-height: 300px; 
+        resize: vertical; 
+        max-height: 60vh; /* Or some other suitable max height */
+        overflow-y: auto;
+      }
+      #journalPreview { 
+        min-height: 300px; 
+        max-height: 60vh; /* Or some other suitable max height */
+        overflow-y: auto;
+        background-color: #f9fafb; /* bg-gray-50 */
+        padding: 1rem; 
+        border-radius: 0.375rem; /* rounded-md */
+        border: 1px solid #e5e7eb; /* border-gray-200 */
+      }
+      /* Basic Markdown styling for preview if Tailwind prose is not available/used */
+      #journalPreview h1, #journalPreview h2, #journalPreview h3, #journalPreview h4, #journalPreview h5, #journalPreview h6 { margin-top: 1.2em; margin-bottom: 0.6em; font-weight: 600; line-height: 1.25; color: #1f2937; }
+      #journalPreview h1 { font-size: 1.875rem; } /* text-2xl */
+      #journalPreview h2 { font-size: 1.5rem; }    /* text-xl */
+      #journalPreview h3 { font-size: 1.25rem; }   /* text-lg */
+      #journalPreview p { margin-bottom: 1em; line-height: 1.6; color: #374151; }
+      #journalPreview ul, #journalPreview ol { margin-left: 1.5em; margin-bottom: 1em; padding-left: 1.5em; }
+      #journalPreview ul { list-style-type: disc; }
+      #journalPreview ol { list-style-type: decimal; }
+      #journalPreview li { margin-bottom: 0.5em; }
+      #journalPreview blockquote { border-left: 4px solid #d1d5db; padding-left: 1em; margin-left: 0; margin-bottom: 1em; font-style: italic; color: #4b5563; }
+      #journalPreview code { background-color: #e5e7eb; padding: 0.2em 0.4em; border-radius: 0.25rem; font-family: monospace; font-size: 0.9em; color: #1f2937;}
+      #journalPreview pre { background-color: #e5e7eb; padding: 1em; border-radius: 0.375rem; overflow-x: auto; margin-bottom: 1em; }
+      #journalPreview pre code { background-color: transparent; padding: 0; font-size: 0.875em; }
+      #journalPreview hr { border: 0; border-top: 1px solid #e5e7eb; margin: 2em 0; }
+      #journalPreview a { color: #3b82f6; text-decoration: underline; }
+      #journalPreview a:hover { color: #2563eb; }
     </style>
   </head>
   <body>
@@ -249,7 +284,7 @@
       <h1 class="text-3xl font-bold text-center mb-4 text-gray-800">
         Advanced Scripture Search
       </h1>
-      <div class="flex justify-center mb-4 space-x-4">
+       <div class="flex justify-center mb-4 space-x-4">
         <button id="howToSearchButton" title="How to Search" class="inline-flex items-center p-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <span>💡 How do I use this?</span>
         </button>
@@ -319,7 +354,7 @@
         </div>
 
         <div id="statisticsContent" class="tab-content">
-          <div id="statsDisplayArea" class="bg-white p-6 rounded-lg shadow-md max-w-4xl mx-auto">
+           <div id="statsDisplayArea" class="bg-white p-6 rounded-lg shadow-md max-w-4xl mx-auto">
             <div class="flex justify-between items-start mb-4">
                  <h3 class="text-xl font-semibold text-gray-700">Search Statistics</h3>
                  <button id="explainStatsButton" class="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none">
@@ -466,9 +501,40 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <div id="searchHelpModalOverlay" class="modal-overlay">
+      <!-- Journal Section START -->
+      <div id="journalSection" class="mt-12 p-4 bg-white shadow-lg rounded-lg max-w-5xl mx-auto">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">My Scripture Journal</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="journalEditor" class="block text-sm font-medium text-gray-700 mb-1">Journal Entry (Markdown)</label>
+            <textarea id="journalEditor" rows="15" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Start writing your journal entry here... Scripture references will be added automatically when you click the '+' on a scripture card."></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Live Preview</label>
+            <div id="journalPreview" class="w-full p-3">
+              <p class="text-gray-400 italic">Your formatted journal notes will appear here.</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 flex flex-wrap gap-3 justify-center md:justify-start">
+          <button id="downloadJournalButton" class="px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline mr-1 align-text-bottom"> <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /> </svg>
+            Download (.md)
+          </button>
+          <button id="copyJournalButton" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline mr-1 align-text-bottom"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v2.25c0 .966-.784 1.75-1.75 1.75H5.75C4.784 7.5 4 6.716 4 5.75V3.5c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" /> </svg>
+            Copy to Clipboard
+          </button>
+          <button id="clearJournalButton" class="px-4 py-2 bg-red-500 text-white font-medium rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline mr-1 align-text-bottom"> <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.576 0c1.256-.623 2.693-.936 4.136-.936s2.88.313 4.136.936m-1.022-.165L15.23 2.283A2.25 2.25 0 0013.487 1.5H10.52a2.25 2.25 0 00-1.742.783l-.897 1.524" /> </svg>
+            Clear Journal
+          </button>
+        </div>
+      </div>
+      <!-- Journal Section END -->
+
+      <div id="searchHelpModalOverlay" class="modal-overlay">
         <div class="modal-box"><button id="searchHelpModalCloseButton" class="modal-close-button">&times;</button><div class="modal-content"><h3>What is this?</h3><p>What scripture search tool do you know of that can let you find all scriptures with both "faith" and "Jesus" in them? Or the verse first mentions "faith" and then "hope", in that order? This app solves those powerful search needs.</p><h3>How to Search</h3><p>You can search for exact phrases, use keywords with AND/OR, or enable full regular expressions.</p><h4>Keyword Search (AND/OR)</h4><p>If the "Search using regex" box is <strong>not</strong> checked:</p><ul><li><strong>AND Search:</strong> Type words separated by <code> AND </code> (e.g., <code>faith AND hope</code>). Finds verses with <strong>both</strong> words, in any order. Auto-converted to regex: <code>faith.*?hope|hope.*?faith</code>.</li><li><strong>OR Search:</strong> Type words separated by <code> OR </code> (e.g., <code>love OR charity</code>). Finds verses with <strong>either</strong> word. Auto-converted to regex: <code>love|charity</code>.</li><li><strong>Note:</strong> <code>AND</code> takes precedence over <code>OR</code> if both are used without regex mode. Use regex mode for complex logic.</li></ul><h4>Exact Phrase Search</h4><p>If you don't use <code>AND</code>/<code>OR</code> and regex is off, it searches for the exact word sequence.</p><h4>Regular Expression (Regex) Search</h4><p>Check "Search using regex" to use regex patterns.</p><ul><li>Example: <code>^And it came to pass</code> (Starts with...).</li><li>Example: <code>Nephi|Lehi</code> (Contains either).</li><li>Example: <code>baptis(m|ed)</code> (Contains "baptism" or "baptised").</li></ul><p>Consider the "Case Sensitive" option.</p><h4>Verse Title Filter</h4><p>Always uses case-insensitive regex.</p><ul><li>Example: <code>^Moroni 10:</code> (All verses in Moroni 10).</li><li>Example: <code>1 Nephi 3:7$</code> (Exactly 1 Nephi 3:7).</li><li>Example: <code>(John|Luke) \d+:1$</code> (First verse of any chapter in John or Luke).</li></ul><h4>Volume Filters</h4><p>Use checkboxes to select which volumes to include.</p></div></div>
     </div>
 
@@ -527,21 +593,21 @@
         </div>
     </div>
 
+    </div> <!-- End of .container -->
 
     <script>
       // --- Constants ---
       const HARDCODED_VOLUME_ORDER = ["Old Testament", "New Testament", "Book of Mormon", "Doctrine and Covenants", "Pearl of Great Price"];
       const STOP_WORDS = new Set(["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"]);
-      const WORD_CLOUD_LIMIT = 75; // Max words in word cloud
-      const RESULT_RENDER_LIMIT = 2000; // Max results to render
-      // CONTEXT_VERSE_RANGE is no longer used as we show the whole chapter.
+      const WORD_CLOUD_LIMIT = 75; 
+      const RESULT_RENDER_LIMIT = 2000; 
 
       // --- Global Variables ---
       const scriptureCache = { lds: null, currentResults: [] };
       let allAvailableVolumes = [];
       let booksMap = new Map();
       let volumeCheckboxElements = [];
-      let currentFrequencyData = { 1: [], 2: [], 3: [], 4: [] }; // Added 4-gram
+      let currentFrequencyData = { 1: [], 2: [], 3: [], 4: [] };
       let currentVolumeChartData = null;
       let currentSortColumn = "total";
       let currentSortDirection = "desc";
@@ -567,7 +633,6 @@
       const resultsHeadingText = document.getElementById("resultsHeadingText");
       const searchStatus = document.getElementById("searchStatus");
       const fallbackMessage = document.getElementById("fallbackMessage");
-      // Modals
       const howToSearchButton = document.getElementById("howToSearchButton");
       const searchHelpModalOverlay = document.getElementById("searchHelpModalOverlay");
       const searchHelpModalCloseButton = document.getElementById("searchHelpModalCloseButton");
@@ -578,12 +643,10 @@
       const stopWordsModalOverlay = document.getElementById("stopWordsModalOverlay");
       const stopWordsModalCloseButton = document.getElementById("stopWordsModalCloseButton");
       const stopWordsListDisplay = document.getElementById("stopWordsListDisplay");
-      // Context Drawer
       const contextDrawerOverlay = document.getElementById("contextDrawerOverlay");
       const contextDrawerCloseButton = document.getElementById("contextDrawerCloseButton");
       const contextDrawerTitle = document.getElementById("contextDrawerTitle");
       const contextDrawerContent = document.getElementById("contextDrawerContent");
-      // Advanced Search
       const advancedSearchArea = document.getElementById("advancedSearchArea");
       const toggleAdvancedSearchButton = document.getElementById("toggleAdvancedSearchButton");
       const toggleAdvancedSearchButtonText = document.getElementById("toggleAdvancedSearchButtonText");
@@ -591,13 +654,11 @@
       const showAdvancedOptionsButton = document.getElementById("showAdvancedOptionsButton");
       const toggleIconCollapse = toggleAdvancedSearchButton.querySelector(".toggle-icon-collapse");
       const toggleIconExpand = toggleAdvancedSearchButton.querySelector(".toggle-icon-expand");
-      // Tabs
       const scripturesTabButton = document.getElementById("scripturesTabButton");
       const statsTabButton = document.getElementById("statsTabButton");
       const scripturesContent = document.getElementById("scripturesContent");
       const statisticsContent = document.getElementById("statisticsContent");
       const scripturesTabCount = document.getElementById("scripturesTabCount");
-      // Statistics Area
       const statsDisplayArea = document.getElementById("statsDisplayArea");
       const statsTotalCount = document.getElementById("statsTotalCount");
       const statsVolumeChartContainer = document.getElementById("statsVolumeChartContainer");
@@ -618,13 +679,20 @@
       const statsTrigramTable = document.getElementById("statsTrigramTable");
       const statsTrigramTableBody = document.getElementById("statsTrigramTableBody");
       const statsTrigramTableHeaders = statsTrigramTable.querySelectorAll("thead th[data-sort]");
-      const statsQuatgramTable = document.getElementById("statsQuatgramTable"); // Added 4-gram table
-      const statsQuatgramTableBody = document.getElementById("statsQuatgramTableBody"); // Added 4-gram table body
-      const statsQuatgramTableHeaders = statsQuatgramTable.querySelectorAll("thead th[data-sort]"); // Added 4-gram table headers
+      const statsQuatgramTable = document.getElementById("statsQuatgramTable"); 
+      const statsQuatgramTableBody = document.getElementById("statsQuatgramTableBody"); 
+      const statsQuatgramTableHeaders = statsQuatgramTable.querySelectorAll("thead th[data-sort]"); 
       const statsError = document.getElementById("statsError");
 
+      // Journal DOM Elements
+      const journalEditor = document.getElementById("journalEditor");
+      const journalPreview = document.getElementById("journalPreview");
+      const downloadJournalButton = document.getElementById("downloadJournalButton");
+      const copyJournalButton = document.getElementById("copyJournalButton");
+      const clearJournalButton = document.getElementById("clearJournalButton");
 
-      // --- Dummy Scripture Data (Ensure it's sufficient for context testing) ---
+
+      // --- Dummy Scripture Data ---
       const DUMMY_SCRIPTURE_DATA = [
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 1, "verse_title": "Genesis 1:1", "scripture_text": "In the beginning God created the heaven and the earth." },
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 2, "verse_title": "Genesis 1:2", "scripture_text": "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters." },
@@ -652,7 +720,6 @@
 
       // --- Data Fetching and Initialization ---
       async function fetchScriptureData() {
-          // ... (fetchScriptureData remains largely the same)
           if (scriptureCache.lds) {
               console.log("Using cached scripture data.");
               return scriptureCache.lds;
@@ -734,7 +801,6 @@
           }
       }
       function populateVolumeCheckboxes() {
-          // ... (populateVolumeCheckboxes remains the same)
           volumeCheckboxesContainer.innerHTML = ""; volumeCheckboxElements = [];
           allAvailableVolumes.forEach((volume) => {
               const div = document.createElement("div"); div.className = "flex items-center";
@@ -759,7 +825,6 @@
       // --- Modal Control ---
       function openModal(overlayElement) { overlayElement.classList.add("active"); }
       function closeModal(overlayElement) { overlayElement.classList.remove("active"); }
-      // Help Modals
       howToSearchButton.addEventListener("click", () => openModal(searchHelpModalOverlay));
       searchHelpModalCloseButton.addEventListener("click", () => closeModal(searchHelpModalOverlay));
       searchHelpModalOverlay.addEventListener("click", (event) => { if (event.target === searchHelpModalOverlay) closeModal(searchHelpModalOverlay); });
@@ -769,10 +834,8 @@
       showStopWordsButton.addEventListener("click", () => openModal(stopWordsModalOverlay));
       stopWordsModalCloseButton.addEventListener("click", () => closeModal(stopWordsModalOverlay));
       stopWordsModalOverlay.addEventListener("click", (event) => { if (event.target === stopWordsModalOverlay) closeModal(stopWordsModalOverlay); });
-      // Context Drawer Modal
       contextDrawerCloseButton.addEventListener("click", () => closeModal(contextDrawerOverlay));
       contextDrawerOverlay.addEventListener("click", (event) => { if (event.target === contextDrawerOverlay) closeModal(contextDrawerOverlay); });
-
       document.addEventListener("keydown", (event) => {
           if (event.key === "Escape") {
               if (searchHelpModalOverlay.classList.contains("active")) closeModal(searchHelpModalOverlay);
@@ -799,7 +862,6 @@
 
       // --- Main Tab Switching (Scriptures/Statistics) ---
       function switchTab(tabName) {
-          // ... (switchTab remains the same)
           console.log("Switching main tab to:", tabName);
           scripturesContent.classList.remove("active");
           statisticsContent.classList.remove("active");
@@ -825,7 +887,7 @@
       statsTabButton.addEventListener("click", () => switchTab("statistics"));
 
       // --- N-gram Tab Switching (within Statistics) ---
-      function switchNgramTab(targetTab) { // targetTab is like "1gram", "2gram", "3gram", "4gram"
+      function switchNgramTab(targetTab) { 
           console.log("Switching N-gram tab to:", targetTab);
           currentNgramSize = parseInt(targetTab.replace('gram', ''), 10); 
 
@@ -867,8 +929,7 @@
       });
 
       // --- Stop Words Checkbox Handler ---
-      excludeStopWordsCheckbox.addEventListener('change', () => {
-          // ... (excludeStopWordsCheckbox handler remains the same)
+       excludeStopWordsCheckbox.addEventListener('change', () => {
           console.log("Exclude Stop Words checkbox changed:", excludeStopWordsCheckbox.checked);
           if (!statsTabButton.disabled && scriptureCache.currentResults.length > 0) {
               console.log("Recalculating statistics due to stop word toggle change...");
@@ -890,11 +951,9 @@
           }
       });
 
-
       // --- Search Logic ---
       function getSelectedVolumes() { return volumeCheckboxElements.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value); }
       async function performSearch() {
-          // ... (performSearch remains largely the same, with minor logging adjustments)
           console.log("--- Starting Search ---");
           if (firstSearchPerformed) { console.log("Collapsing advanced options after subsequent search."); toggleAdvancedSearchArea(true); }
           else { console.log("First search, not collapsing advanced options yet."); }
@@ -919,7 +978,7 @@
           let verseTitleRegex = null; if (verseTitleFilterTerm) { try { verseTitleRegex = new RegExp(verseTitleFilterTerm, "i"); console.log("Verse title regex compiled:", verseTitleRegex); } catch (e) { console.error("Invalid verse title regex:", e); verseTitleFilterError.textContent = `Invalid Regex: ${e.message}`; return; } }
           
           loadingIndicator.classList.remove("hidden"); 
-          resultsContainer.className = shouldDisplayColumns ? "results-flex-container" : "results-grid-container"; // Set based on current checkbox state
+          resultsContainer.className = shouldDisplayColumns ? "results-flex-container" : "results-grid-container"; 
           let results = [];
           try {
               const data = await fetchScriptureData();
@@ -984,7 +1043,7 @@
       // --- Display Logic ---
       function createResultCard(verse, searchTerm, isCaseSensitive, isForContextDrawer = false) {
            const card = document.createElement("div");
-           card.className = "result-card"; // Base class for all cards
+           card.className = "result-card"; 
 
            const scriptureText = verse?.scripture_text ?? "[Scripture text missing]";
            const verseTitle = verse?.verse_title ?? "[Verse title missing]";
@@ -993,7 +1052,6 @@
            const verseNum = verse?.verse_number ?? "?";
 
            let highlightedText = scriptureText;
-           // Only highlight search term if it's provided and not for context drawer cards (where searchTerm is null)
            if (searchTerm && scriptureText !== "[Scripture text missing]") {
                try {
                    let highlightPattern = searchTerm;
@@ -1012,23 +1070,35 @@
            const copyData = `> ${scriptureText} (${verseTitle})`;
 
            const headingElement = document.createElement("h3");
-           // Basic styling for the heading, common to both main results and context drawer cards
            headingElement.className = "scripture-title-heading font-semibold text-sm text-blue-900 mr-12"; 
            headingElement.textContent = verseTitle;
 
            if (!isForContextDrawer) {
-               // Add specific class and event listener for main search result cards
                headingElement.classList.add("clickable-heading"); 
-               headingElement.title = "Click to view context"; // Tooltip
+               headingElement.title = "Click to view context"; 
                headingElement.addEventListener('click', () => openContextDrawer(verse));
            }
-           // For cards in the context drawer, the heading is not clickable to open another drawer.
+
+           // Use textContent for data attributes to prevent XSS if verseTitle/scriptureText somehow contained HTML
+           // However, escape/unescape is used for simplicity here as data is locally sourced or dummy.
+           const addJournalButtonHTML = `
+               <button class="add-to-journal-button p-1 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                       title="Add to Journal"
+                       style="position: absolute; bottom: 0.5rem; right: 0.5rem; z-index: 6;"
+                       data-verse-title="${escape(verseTitle)}"
+                       data-scripture-text="${escape(scriptureText)}">
+                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-600">
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                   </svg>
+               </button>
+           `;
 
            card.innerHTML = `
                <button class="copy-button" title="Copy scripture" data-copy="${escape(copyData)}">Copy</button>
                <div>
                    <div class="flex justify-between items-start mb-2">
-                       </div>
+                       <!-- Heading will be prepended here -->
+                   </div>
                    <p class="text-sm text-gray-800 mb-2">${highlightedText}</p>
                </div>
                <div class="mt-auto text-xs text-gray-500 pt-2 border-t border-gray-100">
@@ -1036,6 +1106,11 @@
                </div>
            `;
            card.querySelector('.flex.justify-between.items-start.mb-2').prepend(headingElement);
+           
+           const tempDiv = document.createElement('div'); 
+           tempDiv.innerHTML = addJournalButtonHTML.trim();
+           card.appendChild(tempDiv.firstChild); 
+
            return card;
        }
       function displayResults(results, searchTerm, isCaseSensitive, displayColumns) {
@@ -1066,27 +1141,21 @@
           contextDrawerTitle.textContent = `${clickedVerse.book_title} - Chapter ${clickedVerse.chapter_number}`;
           contextDrawerContent.innerHTML = '<p class="text-center text-gray-500">Loading context...</p>'; 
 
-          // Find all verses in the same book and chapter
           const chapterVerses = scriptureCache.lds.filter(
               v => v.book_title === clickedVerse.book_title && v.chapter_number === clickedVerse.chapter_number
-          ).sort((a, b) => a.verse_number - b.verse_number); // Ensure sorted by verse number
+          ).sort((a, b) => a.verse_number - b.verse_number); 
 
           if (chapterVerses.length === 0) {
               contextDrawerContent.innerHTML = '<p class="text-center text-gray-500">No verses found for this chapter.</p>';
               openModal(contextDrawerOverlay);
               return;
           }
-
-          // No longer slicing by CONTEXT_VERSE_RANGE, use all chapterVerses
           const versesToShow = chapterVerses;
-
-          contextDrawerContent.innerHTML = ""; // Clear loading message
+          contextDrawerContent.innerHTML = ""; 
           let currentVerseElement = null;
 
           versesToShow.forEach(verse => {
-              // Create a card using the updated createResultCard function, indicating it's for the context drawer
-              const cardElement = createResultCard(verse, null, false, true); // searchTerm is null, isForContextDrawer is true
-
+              const cardElement = createResultCard(verse, null, false, true); 
               if (verse.verse_number === clickedVerse.verse_number) {
                   cardElement.classList.add('current-context-verse');
                   cardElement.id = `context-verse-${verse.verse_number}`; 
@@ -1095,7 +1164,7 @@
               contextDrawerContent.appendChild(cardElement);
           });
           
-          if (versesToShow.length === 0) { // Should not happen if chapterVerses has items, but good check
+          if (versesToShow.length === 0) { 
              contextDrawerContent.innerHTML = '<p class="text-center text-gray-500">No surrounding verses to display.</p>';
           }
 
@@ -1111,7 +1180,6 @@
 
       // --- N-gram Calculation ---
       function calculateNGrams(results, n, excludeStopWords) {
-          // ... (calculateNGrams remains the same)
           console.log(`Calculating ${n}-grams... (Exclude Stop Words: ${excludeStopWords})`);
           const ngramCounts = {};
           const ngramUniqueCounts = {};
@@ -1157,11 +1225,10 @@
 
       // --- Statistics Calculation and Display ---
       function calculateAndDisplayStatistics(results, totalScripturesMatched, originalSearchTerm, useRegex) {
-         // ... (calculateAndDisplayStatistics remains the same, but calls calculateNGrams for 4-grams)
          console.log("Calculating statistics for", totalScripturesMatched, "results.");
          statsError.classList.add('hidden'); statsError.textContent = '';
          currentVolumeChartData = null;
-         currentFrequencyData = { 1: [], 2: [], 3: [], 4: [] }; // Ensure 4 is initialized
+         currentFrequencyData = { 1: [], 2: [], 3: [], 4: [] }; 
 
          if (!results || totalScripturesMatched === 0) { console.log("No results, clearing stats display."); clearStatisticsDisplay(); statsTabButton.disabled = true; return; }
 
@@ -1221,7 +1288,7 @@
 
          currentFrequencyData[2] = calculateNGrams(results, 2, shouldExcludeStopWords);
          currentFrequencyData[3] = calculateNGrams(results, 3, shouldExcludeStopWords);
-         currentFrequencyData[4] = calculateNGrams(results, 4, shouldExcludeStopWords); // Calculate 4-grams
+         currentFrequencyData[4] = calculateNGrams(results, 4, shouldExcludeStopWords); 
  
          statsTotalCount.textContent = totalScripturesMatched;
          renderWordFormsBreakdown(wordFormsCounts, calculateWordForms);
@@ -1243,7 +1310,6 @@
 
       // --- D3 Volume Chart Rendering ---
       function renderVolumeChart(data) {
-          // ... (renderVolumeChart remains the same)
           if (!data || data.length === 0) {
               console.log("renderVolumeChart called with no data. Displaying placeholder.");
               statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">No volume data to display.</p>';
@@ -1327,7 +1393,6 @@
           }, 50); 
       }
       function wrapAxisText(text, width) {
-          // ... (wrapAxisText remains the same)
           text.each(function() {
               const text = d3.select(this);
               const words = text.text().split(/\s+/).reverse();
@@ -1353,7 +1418,6 @@
 
       // --- Word Forms Breakdown Rendering ---
       function renderWordFormsBreakdown(formsData, wasSingleWordSearch) {
-          // ... (renderWordFormsBreakdown remains the same)
           console.log("Rendering word forms breakdown:", formsData);
           statsWordFormsList.innerHTML = ''; 
 
@@ -1408,10 +1472,10 @@
 
            const frequencyData = currentFrequencyData[ngramSize] || [];
            const dataKey = ngramSize === 1 ? 'word' : 'phrase';
-           let baseSizeMultiplier = 5; // Default for 1-gram
+           let baseSizeMultiplier = 5; 
            if (ngramSize === 2) baseSizeMultiplier = 3.5;
            else if (ngramSize === 3) baseSizeMultiplier = 3;
-           else if (ngramSize === 4) baseSizeMultiplier = 2.5; // Adjusted for 4-gram
+           else if (ngramSize === 4) baseSizeMultiplier = 2.5; 
 
            const wordData = frequencyData.slice(0, WORD_CLOUD_LIMIT).map(d => ({
                text: d[dataKey],
@@ -1435,7 +1499,7 @@
                wordCloudLayout = d3.layout.cloud()
                    .size([containerWidth, containerHeight])
                    .words(wordData)
-                   .padding(ngramSize === 1 ? 5 : ngramSize === 2 ? 3 : (ngramSize === 3 ? 2 : 1.5)) // Adjusted padding
+                   .padding(ngramSize === 1 ? 5 : ngramSize === 2 ? 3 : (ngramSize === 3 ? 2 : 1.5)) 
                    .rotate(() => (ngramSize === 1 && Math.random() > 0.7 ? 90 : 0)) 
                    .font("sans-serif")
                    .fontSize(d => d.size)
@@ -1448,7 +1512,6 @@
            }
        }
        function drawWordCloud(words, ngramSize, containerId, width, height) {
-           // ... (drawWordCloud remains the same)
            console.log(`Drawing ${ngramSize}-gram word cloud SVG in ${containerId}...`);
            const cloudContainer = document.getElementById(containerId);
            if (!cloudContainer) { console.warn(`Word cloud container ${containerId} not found during draw.`); return; }
@@ -1499,7 +1562,7 @@
               tableBody = statsBigramTableBody; headers = statsBigramTableHeaders; colspan = 3; defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'phrase';
           } else if (currentNgramSize === 3) {
               tableBody = statsTrigramTableBody; headers = statsTrigramTableHeaders; colspan = 3; defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'phrase';
-          } else if (currentNgramSize === 4) { // Added 4-gram case
+          } else if (currentNgramSize === 4) { 
               tableBody = statsQuatgramTableBody; headers = statsQuatgramTableHeaders; colspan = 3; defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'phrase';
           } else {
               console.error("Unsupported N-gram size for table rendering:", currentNgramSize); return;
@@ -1551,7 +1614,7 @@
                   row.insertCell().textContent = item[dataKey]; 
                   row.insertCell().textContent = item.total;
                   row.insertCell().textContent = item.unique;
-                  if (currentNgramSize === 1) { // Only 1-gram has these extra columns
+                  if (currentNgramSize === 1) { 
                       row.insertCell().textContent = formatStat(item.freqPerScripture, 3);
                       row.insertCell().textContent = formatPercentage(item.freqPerWord, 2);
                       row.insertCell().textContent = formatPercentage(item.coverage, 1);
@@ -1561,7 +1624,7 @@
       }
 
       // --- Sorting Logic (Handles multiple tables) ---
-      function handleSort(column, tableType) { // tableType is like "1gram", "2gram", "3gram", "4gram"
+      function handleSort(column, tableType) { 
           console.log(`Handling sort for column: ${column} in table: ${tableType}`);
           const targetNgramSize = parseInt(tableType.replace('gram', ''), 10);
 
@@ -1586,7 +1649,7 @@
           let tableType = '1gram'; 
           if (th.closest('#statsBigramTable')) { tableType = '2gram'; }
           else if (th.closest('#statsTrigramTable')) { tableType = '3gram'; } 
-          else if (th.closest('#statsQuatgramTable')) { tableType = '4gram'; } // Added 4-gram table
+          else if (th.closest('#statsQuatgramTable')) { tableType = '4gram'; } 
           th.addEventListener("click", () => handleSort(th.dataset.sort, tableType));
       });
 
@@ -1606,7 +1669,7 @@
          if (statsTrigramTableBody) { 
              statsTrigramTableBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 3-gram statistics.</td></tr>`;
          }
-         if (statsQuatgramTableBody) { // Added for 4-gram
+         if (statsQuatgramTableBody) { 
              statsQuatgramTableBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 4-gram statistics.</td></tr>`;
          }
 
@@ -1616,7 +1679,7 @@
              container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${type} cloud.</p>`;
          });
 
-         currentFrequencyData = { 1: [], 2: [], 3: [], 4: [] }; // Ensure 4 is cleared
+         currentFrequencyData = { 1: [], 2: [], 3: [], 4: [] }; 
          document.querySelectorAll('.stats-table th[data-sort]').forEach((th) => { th.classList.remove("sorted-asc", "sorted-desc"); });
          statsError.classList.add('hidden'); statsError.textContent = '';
          currentNgramSize = 1; 
@@ -1626,10 +1689,11 @@
          document.getElementById('1gramContent')?.classList.add('active'); 
       }
 
-      // --- Copy Button Logic ---
+      // --- Event Delegation for Copy and Add to Journal Buttons ---
       document.body.addEventListener("click", async (event) => {
-           // Check if the click target or its ancestor is a copy button AND if it's within resultsContainer OR contextDrawerContent
            const copyButton = event.target.closest('.copy-button');
+           const addToJournalButton = event.target.closest('.add-to-journal-button');
+
            if (copyButton && (resultsContainer.contains(copyButton) || contextDrawerContent.contains(copyButton))) {
                const textToCopy = unescape(copyButton.dataset.copy);
                try {
@@ -1646,6 +1710,17 @@
                    copyButton.textContent = "Error";
                    setTimeout(() => { copyButton.textContent = "Copy"; }, 1500);
                }
+           } else if (addToJournalButton && (resultsContainer.contains(addToJournalButton) || contextDrawerContent.contains(addToJournalButton))) {
+               const verseTitle = unescape(addToJournalButton.dataset.verseTitle);
+               const scriptureText = unescape(addToJournalButton.dataset.scriptureText);
+               
+               const scriptureMarkdown = `\n\n### ${verseTitle}\n\n> ${scriptureText}\n\n---`;
+               
+               journalEditor.value += scriptureMarkdown;
+               updateJournalPreview(); // Update preview
+               journalEditor.scrollTop = journalEditor.scrollHeight; // Scroll to bottom
+               journalEditor.focus(); // Focus on editor
+               console.log(`Added to journal: ${verseTitle}`);
            }
        });
 
@@ -1660,6 +1735,68 @@
           });
       }
 
+      // --- Journal Functionality ---
+      function updateJournalPreview() {
+        const markdownText = journalEditor.value;
+        if (markdownText.trim() === "") {
+            journalPreview.innerHTML = '<p class="text-gray-400 italic">Your formatted journal notes will appear here.</p>';
+        } else {
+            journalPreview.innerHTML = marked.parse(markdownText);
+        }
+      }
+
+      journalEditor.addEventListener("input", updateJournalPreview);
+
+      downloadJournalButton.addEventListener("click", () => {
+        const content = journalEditor.value;
+        const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "scripture_journal.md";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        console.log("Journal downloaded.");
+      });
+
+      copyJournalButton.addEventListener("click", async () => {
+        const content = journalEditor.value;
+        if (!content) {
+            alert("Journal is empty. Nothing to copy.");
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(content);
+            copyJournalButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline mr-1 align-text-bottom"> <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /> </svg>
+                Copied!`;
+            setTimeout(() => {
+                 copyJournalButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline mr-1 align-text-bottom"> <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v2.25c0 .966-.784 1.75-1.75 1.75H5.75C4.784 7.5 4 6.716 4 5.75V3.5c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" /> </svg>
+                    Copy to Clipboard`;
+            }, 2000);
+            console.log("Journal content copied.");
+        } catch (err) {
+            console.error("Failed to copy journal: ", err);
+            alert("Failed to copy journal. See console for details.");
+        }
+      });
+
+      clearJournalButton.addEventListener("click", () => {
+        if (journalEditor.value.trim() === "") {
+            alert("Journal is already empty.");
+            return;
+        }
+        if (confirm("Are you sure you want to clear the entire journal? This action cannot be undone.")) {
+            journalEditor.value = "";
+            updateJournalPreview();
+            console.log("Journal cleared.");
+        }
+      });
+
+
       // --- Initial Setup ---
       document.addEventListener("DOMContentLoaded", function () {
           console.log("DOM Loaded. Setting up event listeners.");
@@ -1667,21 +1804,18 @@
           searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") performSearch(); });
           verseTitleFilterInput.addEventListener("keypress", (e) => { if (e.key === "Enter") performSearch(); });
           
-          // Set default for shuffle
           shuffleResultsCheckbox.checked = true;
           console.log("Default: Shuffle Results enabled.");
 
-          // Set default for columns by volume
           columnsByVolumeCheckbox.checked = true;
           console.log("Default: Columns by Volume enabled.");
-          resultsContainer.className = "results-flex-container"; // Set initial class based on new default
+          resultsContainer.className = "results-flex-container"; 
 
           columnsByVolumeCheckbox.addEventListener("change", () => { 
             console.log("Columns by Volume checkbox changed."); 
             const hasResults = scriptureCache.currentResults && scriptureCache.currentResults.length > 0;
             if (hasResults) { 
-                console.log("Triggering search due to column change with existing results."); 
-                // Re-display with current search term and filters but new column setting
+                console.log("Triggering re-display due to column change with existing results."); 
                 displayResults(scriptureCache.currentResults, searchInput.value.trim(), caseSensitiveCheckbox.checked, columnsByVolumeCheckbox.checked);
             } else { 
                 console.log("Column view changed, but no results currently displayed. Only updating class."); 
@@ -1696,6 +1830,7 @@
           toggleAdvancedSearchLink.style.display = 'none';
           clearStatisticsDisplay(); 
           populateStopWordsModal(); 
+          updateJournalPreview(); // Initial call to set placeholder if empty
       });
     </script>
   </body>

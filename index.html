@@ -362,6 +362,7 @@
                     <button class="ngram-tab-button active" data-ngram-tab="1gram">1-gram (Words)</button>
                     <button class="ngram-tab-button" data-ngram-tab="2gram">2-gram (Pairs)</button>
                     <button class="ngram-tab-button" data-ngram-tab="3gram">3-gram (Triplets)</button>
+                    <button class="ngram-tab-button" data-ngram-tab="4gram">4-gram (Quartets)</button>
                 </div>
                 <div id="ngramTabContentContainer">
                     <div id="1gramContent" class="ngram-tab-content active">
@@ -436,6 +437,29 @@
                             </table>
                         </div>
                     </div>
+                    <div id="4gramContent" class="ngram-tab-content">
+                        <div class="mb-4">
+                            <h5 class="text-sm font-semibold mb-1 text-gray-600">Quartet Cloud</h5>
+                             <div id="wordCloudContainer4gram" class="wordCloudContainer">
+                                <p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate quartet cloud.</p>
+                            </div>
+                        </div>
+                        <h5 class="text-sm font-semibold mb-1 text-gray-600">Frequency Table</h5>
+                        <div class="overflow-x-auto">
+                           <table id="statsQuatgramTable" class="stats-table">
+                               <thead>
+                                   <tr>
+                                       <th data-sort="phrase">Quartet (4-gram) <span class="sort-arrow"></span></th>
+                                       <th data-sort="total">Total Count <span class="sort-arrow"></span></th>
+                                       <th data-sort="unique">Unique Count <span class="sort-arrow"></span></th>
+                                   </tr>
+                               </thead>
+                               <tbody id="statsQuatgramTableBody">
+                                   <tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 4-gram statistics.</td></tr>
+                               </tbody>
+                           </table>
+                       </div>
+                   </div>
                 </div>
             </div>
              <div id="statsError" class="text-red-600 text-sm mt-4 hidden"></div>
@@ -462,14 +486,14 @@
           <p>If you performed a non-regex search for a single word (e.g., "faith"), this section shows the counts for different words found in the results that start with your normalized search term (e.g., "faith", "faithful", "faithfulness"). This helps clarify how the total match count relates to specific word variations.</p>
           <dl><dt>Word Form: Count</dt><dd>Shows the total number of times each specific word form appears across all matched scriptures.</dd></dl>
           <h4>N-gram Analysis Section</h4>
-          <p>This section shows the most common words (1-gram), pairs (2-gram), or triplets (3-gram) found in the matched scriptures. Each tab provides a word/phrase cloud visualization and a frequency table.</p>
-          <p>Use the "Exclude Stop Words" checkbox to control whether common words (like "the", "a", "is") are included in the analysis. Excluding them often highlights more meaningful terms, especially for 1-grams. Including them preserves the exact phrasing for 2-grams and 3-grams.</p>
+          <p>This section shows the most common words (1-gram), pairs (2-gram), triplets (3-gram), or quartets (4-gram) found in the matched scriptures. Each tab provides a word/phrase cloud visualization and a frequency table.</p>
+          <p>Use the "Exclude Stop Words" checkbox to control whether common words (like "the", "a", "is") are included in the analysis. Excluding them often highlights more meaningful terms, especially for 1-grams. Including them preserves the exact phrasing for 2-grams, 3-grams and 4-grams.</p>
           <h5>Word/Phrase Cloud</h5>
-          <p>A visual representation of the most frequent items (words, pairs, or triplets) for the selected N-gram size. Larger items appear more frequently. Clicking an item will search for it (only works well for single words).</p>
+          <p>A visual representation of the most frequent items (words, pairs, triplets, or quartets) for the selected N-gram size. Larger items appear more frequently. Clicking an item will search for it (only works well for single words).</p>
           <h5>Frequency Tables</h5>
-          <p>These tables show detailed counts for individual words (1-gram), pairs (2-gram), or triplets (3-gram).</p>
+          <p>These tables show detailed counts for individual words (1-gram), pairs (2-gram), triplets (3-gram), or quartets (4-gram).</p>
           <dl>
-            <dt>Word / Phrase / Triplet</dt><dd>The specific normalized word (1-gram), sequence of two words (2-gram), or sequence of three words (3-gram) being analyzed.</dd>
+            <dt>Word / Phrase / Triplet / Quartet</dt><dd>The specific normalized word (1-gram), sequence of two words (2-gram), sequence of three words (3-gram), or sequence of four words (4-gram) being analyzed.</dd>
             <dt>Total Count</dt><dd>The absolute total number of times this <strong>specific item</strong> appears across ALL matched scriptures. An item can appear multiple times in a single scripture.</dd>
             <dt>Unique Count</dt><dd>The number of unique scriptures (out of the 'Total Unique Scriptures Matched') that contain this <strong>specific item</strong> at least once.</dd>
             <dt>Freq/Scripture (1-gram only)</dt><dd>Average number of times this specific word appears per matched scripture. Calculated as: <code>Word's Total Count / Total Unique Scriptures Matched</code>.</dd>
@@ -510,14 +534,14 @@
       const STOP_WORDS = new Set(["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"]);
       const WORD_CLOUD_LIMIT = 75; // Max words in word cloud
       const RESULT_RENDER_LIMIT = 2000; // Max results to render
-      const CONTEXT_VERSE_RANGE = 15; // Number of verses before and after the clicked one
+      // CONTEXT_VERSE_RANGE is no longer used as we show the whole chapter.
 
       // --- Global Variables ---
       const scriptureCache = { lds: null, currentResults: [] };
       let allAvailableVolumes = [];
       let booksMap = new Map();
       let volumeCheckboxElements = [];
-      let currentFrequencyData = { 1: [], 2: [], 3: [] };
+      let currentFrequencyData = { 1: [], 2: [], 3: [], 4: [] }; // Added 4-gram
       let currentVolumeChartData = null;
       let currentSortColumn = "total";
       let currentSortDirection = "desc";
@@ -594,13 +618,16 @@
       const statsTrigramTable = document.getElementById("statsTrigramTable");
       const statsTrigramTableBody = document.getElementById("statsTrigramTableBody");
       const statsTrigramTableHeaders = statsTrigramTable.querySelectorAll("thead th[data-sort]");
+      const statsQuatgramTable = document.getElementById("statsQuatgramTable"); // Added 4-gram table
+      const statsQuatgramTableBody = document.getElementById("statsQuatgramTableBody"); // Added 4-gram table body
+      const statsQuatgramTableHeaders = statsQuatgramTable.querySelectorAll("thead th[data-sort]"); // Added 4-gram table headers
       const statsError = document.getElementById("statsError");
 
 
       // --- Dummy Scripture Data (Ensure it's sufficient for context testing) ---
       const DUMMY_SCRIPTURE_DATA = [
-          { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 1, "verse_title": "Genesis 1:1", "verse_short_title": "Gen. 1:1", "scripture_text": "In the beginning God created the heaven and the earth." },
-          { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 2, "verse_title": "Genesis 1:2", "verse_short_title": "Gen. 1:2", "scripture_text": "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters." },
+          { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 1, "verse_title": "Genesis 1:1", "scripture_text": "In the beginning God created the heaven and the earth." },
+          { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 2, "verse_title": "Genesis 1:2", "scripture_text": "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters." },
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 3, "verse_title": "Genesis 1:3", "verse_short_title": "Gen. 1:3", "scripture_text": "And God said, Let there be light: and there was light." },
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 4, "verse_title": "Genesis 1:4", "verse_short_title": "Gen. 1:4", "scripture_text": "And God saw the light, that it was good: and God divided the light from the darkness." },
           { "volume_title": "Old Testament", "book_title": "Genesis", "book_short_title": "Gen.", "chapter_number": 1, "verse_number": 5, "verse_title": "Genesis 1:5", "verse_short_title": "Gen. 1:5", "scripture_text": "And God called the light Day, and the darkness he called Night. And the evening and the morning were the first day." },
@@ -798,8 +825,7 @@
       statsTabButton.addEventListener("click", () => switchTab("statistics"));
 
       // --- N-gram Tab Switching (within Statistics) ---
-      function switchNgramTab(targetTab) { // targetTab is like "1gram", "2gram", "3gram"
-          // ... (switchNgramTab remains the same)
+      function switchNgramTab(targetTab) { // targetTab is like "1gram", "2gram", "3gram", "4gram"
           console.log("Switching N-gram tab to:", targetTab);
           currentNgramSize = parseInt(targetTab.replace('gram', ''), 10); 
 
@@ -826,7 +852,10 @@
                  console.log(`No word cloud container found for ${currentNgramSize}-gram.`);
                  const container = document.getElementById(cloudContainerId);
                  if(container) {
-                    container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${currentNgramSize === 1 ? 'word' : currentNgramSize === 2 ? 'phrase' : 'triplet'} cloud.</p>`;
+                    const typeName = currentNgramSize === 1 ? 'word' : 
+                                   currentNgramSize === 2 ? 'phrase' : 
+                                   currentNgramSize === 3 ? 'triplet' : 'quartet';
+                    container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${typeName} cloud.</p>`;
                  }
               }
           } else {
@@ -889,7 +918,8 @@
           let mainSearchRegex = null; if (useRegex && (searchTerm || generatedRegexString)) { try { const pattern = generatedRegexString || searchTerm; if (!pattern) throw new Error("Regex pattern is empty."); mainSearchRegex = new RegExp(pattern, isCaseSensitive ? "g" : "gi"); console.log("Main search regex compiled:", mainSearchRegex); } catch (e) { console.error("Invalid main search regex:", e); searchInputError.textContent = `Invalid Regex: ${e.message}`; return; } }
           let verseTitleRegex = null; if (verseTitleFilterTerm) { try { verseTitleRegex = new RegExp(verseTitleFilterTerm, "i"); console.log("Verse title regex compiled:", verseTitleRegex); } catch (e) { console.error("Invalid verse title regex:", e); verseTitleFilterError.textContent = `Invalid Regex: ${e.message}`; return; } }
           
-          loadingIndicator.classList.remove("hidden"); resultsContainer.className = shouldDisplayColumns ? "results-flex-container" : "results-grid-container";
+          loadingIndicator.classList.remove("hidden"); 
+          resultsContainer.className = shouldDisplayColumns ? "results-flex-container" : "results-grid-container"; // Set based on current checkbox state
           let results = [];
           try {
               const data = await fetchScriptureData();
@@ -1036,9 +1066,10 @@
           contextDrawerTitle.textContent = `${clickedVerse.book_title} - Chapter ${clickedVerse.chapter_number}`;
           contextDrawerContent.innerHTML = '<p class="text-center text-gray-500">Loading context...</p>'; 
 
+          // Find all verses in the same book and chapter
           const chapterVerses = scriptureCache.lds.filter(
               v => v.book_title === clickedVerse.book_title && v.chapter_number === clickedVerse.chapter_number
-          ).sort((a, b) => a.verse_number - b.verse_number); 
+          ).sort((a, b) => a.verse_number - b.verse_number); // Ensure sorted by verse number
 
           if (chapterVerses.length === 0) {
               contextDrawerContent.innerHTML = '<p class="text-center text-gray-500">No verses found for this chapter.</p>';
@@ -1046,17 +1077,8 @@
               return;
           }
 
-          const clickedVerseIndex = chapterVerses.findIndex(v => v.verse_number === clickedVerse.verse_number);
-
-          if (clickedVerseIndex === -1) {
-              contextDrawerContent.innerHTML = '<p class="text-center text-red-500">Clicked verse not found in chapter data.</p>';
-              openModal(contextDrawerOverlay);
-              return;
-          }
-
-          const startIndex = Math.max(0, clickedVerseIndex - CONTEXT_VERSE_RANGE);
-          const endIndex = Math.min(chapterVerses.length, clickedVerseIndex + CONTEXT_VERSE_RANGE + 1);
-          const versesToShow = chapterVerses.slice(startIndex, endIndex);
+          // No longer slicing by CONTEXT_VERSE_RANGE, use all chapterVerses
+          const versesToShow = chapterVerses;
 
           contextDrawerContent.innerHTML = ""; // Clear loading message
           let currentVerseElement = null;
@@ -1073,7 +1095,7 @@
               contextDrawerContent.appendChild(cardElement);
           });
           
-          if (versesToShow.length === 0) {
+          if (versesToShow.length === 0) { // Should not happen if chapterVerses has items, but good check
              contextDrawerContent.innerHTML = '<p class="text-center text-gray-500">No surrounding verses to display.</p>';
           }
 
@@ -1135,11 +1157,11 @@
 
       // --- Statistics Calculation and Display ---
       function calculateAndDisplayStatistics(results, totalScripturesMatched, originalSearchTerm, useRegex) {
-         // ... (calculateAndDisplayStatistics remains the same)
+         // ... (calculateAndDisplayStatistics remains the same, but calls calculateNGrams for 4-grams)
          console.log("Calculating statistics for", totalScripturesMatched, "results.");
          statsError.classList.add('hidden'); statsError.textContent = '';
          currentVolumeChartData = null;
-         currentFrequencyData = { 1: [], 2: [], 3: [] };
+         currentFrequencyData = { 1: [], 2: [], 3: [], 4: [] }; // Ensure 4 is initialized
 
          if (!results || totalScripturesMatched === 0) { console.log("No results, clearing stats display."); clearStatisticsDisplay(); statsTabButton.disabled = true; return; }
 
@@ -1199,6 +1221,7 @@
 
          currentFrequencyData[2] = calculateNGrams(results, 2, shouldExcludeStopWords);
          currentFrequencyData[3] = calculateNGrams(results, 3, shouldExcludeStopWords);
+         currentFrequencyData[4] = calculateNGrams(results, 4, shouldExcludeStopWords); // Calculate 4-grams
  
          statsTotalCount.textContent = totalScripturesMatched;
          renderWordFormsBreakdown(wordFormsCounts, calculateWordForms);
@@ -1366,7 +1389,6 @@
 
       // --- Word Cloud Rendering ---
        function renderWordCloud(ngramSize) {
-           // ... (renderWordCloud remains the same)
            console.log(`Rendering word cloud for ${ngramSize}-gram...`);
            const containerId = `wordCloudContainer${ngramSize}gram`;
            const cloudContainer = document.getElementById(containerId);
@@ -1386,15 +1408,24 @@
 
            const frequencyData = currentFrequencyData[ngramSize] || [];
            const dataKey = ngramSize === 1 ? 'word' : 'phrase';
+           let baseSizeMultiplier = 5; // Default for 1-gram
+           if (ngramSize === 2) baseSizeMultiplier = 3.5;
+           else if (ngramSize === 3) baseSizeMultiplier = 3;
+           else if (ngramSize === 4) baseSizeMultiplier = 2.5; // Adjusted for 4-gram
+
            const wordData = frequencyData.slice(0, WORD_CLOUD_LIMIT).map(d => ({
                text: d[dataKey],
-               size: Math.sqrt(d.total) * (ngramSize === 1 ? 5 : ngramSize === 2 ? 3.5 : 3)
+               size: Math.sqrt(d.total) * baseSizeMultiplier
            }));
+
+           const typeName = ngramSize === 1 ? 'word' : 
+                            ngramSize === 2 ? 'phrase' : 
+                            ngramSize === 3 ? 'triplet' : 'quartet';
 
            if (wordData.length === 0) {
                console.log(`No data for ${ngramSize}-gram word cloud.`);
                const currentStatus = cloudContainer.querySelector('.wordCloudStatus');
-               if(currentStatus) currentStatus.textContent = `Not enough data to generate ${ngramSize === 1 ? 'word' : ngramSize === 2 ? 'phrase' : 'triplet'} cloud.`;
+               if(currentStatus) currentStatus.textContent = `Not enough data to generate ${typeName} cloud.`;
                return;
            }
 
@@ -1404,7 +1435,7 @@
                wordCloudLayout = d3.layout.cloud()
                    .size([containerWidth, containerHeight])
                    .words(wordData)
-                   .padding(ngramSize === 1 ? 5 : ngramSize === 2 ? 3 : 2) 
+                   .padding(ngramSize === 1 ? 5 : ngramSize === 2 ? 3 : (ngramSize === 3 ? 2 : 1.5)) // Adjusted padding
                    .rotate(() => (ngramSize === 1 && Math.random() > 0.7 ? 90 : 0)) 
                    .font("sans-serif")
                    .fontSize(d => d.size)
@@ -1413,7 +1444,7 @@
            } catch (error) {
                console.error(`Error initializing D3 cloud layout for ${ngramSize}-gram:`, error);
                const currentStatus = cloudContainer.querySelector('.wordCloudStatus');
-               if(currentStatus) currentStatus.textContent = `Error generating ${ngramSize === 1 ? 'word' : ngramSize === 2 ? 'phrase' : 'triplet'} cloud layout.`;
+               if(currentStatus) currentStatus.textContent = `Error generating ${typeName} cloud layout.`;
            }
        }
        function drawWordCloud(words, ngramSize, containerId, width, height) {
@@ -1422,6 +1453,9 @@
            const cloudContainer = document.getElementById(containerId);
            if (!cloudContainer) { console.warn(`Word cloud container ${containerId} not found during draw.`); return; }
            cloudContainer.innerHTML = ''; 
+           const typeName = ngramSize === 1 ? 'word' : 
+                            ngramSize === 2 ? 'phrase' : 
+                            ngramSize === 3 ? 'triplet' : 'quartet';
            try {
                const svg = d3.select(`#${containerId}`).append("svg")
                    .attr("width", width)
@@ -1449,13 +1483,12 @@
                console.log(`${ngramSize}-gram word cloud drawn.`);
            } catch (error) {
                console.error(`Error drawing D3 ${ngramSize}-gram word cloud:`, error);
-               cloudContainer.innerHTML = `<p class="wordCloudStatus text-center text-red-600 p-4">Error drawing ${ngramSize === 1 ? 'word' : ngramSize === 2 ? 'phrase' : 'triplet'} cloud.</p>`;
+               cloudContainer.innerHTML = `<p class="wordCloudStatus text-center text-red-600 p-4">Error drawing ${typeName} cloud.</p>`;
            }
        }
 
       // --- Frequency Table Rendering (Generic for N-grams) ---
       function renderFrequencyTable() {
-          // ... (renderFrequencyTable remains the same)
           console.log(`Rendering frequency table for ${currentNgramSize}-gram.`);
           const data = currentFrequencyData[currentNgramSize] || [];
           let tableBody, headers, colspan, defaultSortCol, defaultSortDir, dataKey;
@@ -1466,6 +1499,8 @@
               tableBody = statsBigramTableBody; headers = statsBigramTableHeaders; colspan = 3; defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'phrase';
           } else if (currentNgramSize === 3) {
               tableBody = statsTrigramTableBody; headers = statsTrigramTableHeaders; colspan = 3; defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'phrase';
+          } else if (currentNgramSize === 4) { // Added 4-gram case
+              tableBody = statsQuatgramTableBody; headers = statsQuatgramTableHeaders; colspan = 3; defaultSortCol = 'total'; defaultSortDir = 'desc'; dataKey = 'phrase';
           } else {
               console.error("Unsupported N-gram size for table rendering:", currentNgramSize); return;
           }
@@ -1503,17 +1538,20 @@
           }
 
           const dataToDisplay = data.slice(0, 100);
+          const typeName = currentNgramSize === 1 ? 'word' : 
+                           currentNgramSize === 2 ? '2-gram' : 
+                           currentNgramSize === 3 ? '3-gram' : '4-gram';
           if (dataToDisplay.length === 0) {
-              console.log(`No ${currentNgramSize}-gram data to display.`);
-              tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-gray-500 py-4">No ${currentNgramSize}-gram frequency data to display.</td></tr>`;
+              console.log(`No ${typeName} data to display.`);
+              tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-gray-500 py-4">No ${typeName} frequency data to display.</td></tr>`;
           } else {
-              console.log(`Populating ${currentNgramSize}-gram table with ${dataToDisplay.length} rows.`);
+              console.log(`Populating ${typeName} table with ${dataToDisplay.length} rows.`);
               dataToDisplay.forEach((item) => {
                   const row = tableBody.insertRow();
                   row.insertCell().textContent = item[dataKey]; 
                   row.insertCell().textContent = item.total;
                   row.insertCell().textContent = item.unique;
-                  if (currentNgramSize === 1) {
+                  if (currentNgramSize === 1) { // Only 1-gram has these extra columns
                       row.insertCell().textContent = formatStat(item.freqPerScripture, 3);
                       row.insertCell().textContent = formatPercentage(item.freqPerWord, 2);
                       row.insertCell().textContent = formatPercentage(item.coverage, 1);
@@ -1523,8 +1561,7 @@
       }
 
       // --- Sorting Logic (Handles multiple tables) ---
-      function handleSort(column, tableType) { // tableType is like "1gram", "2gram", "3gram"
-          // ... (handleSort remains the same)
+      function handleSort(column, tableType) { // tableType is like "1gram", "2gram", "3gram", "4gram"
           console.log(`Handling sort for column: ${column} in table: ${tableType}`);
           const targetNgramSize = parseInt(tableType.replace('gram', ''), 10);
 
@@ -1549,12 +1586,12 @@
           let tableType = '1gram'; 
           if (th.closest('#statsBigramTable')) { tableType = '2gram'; }
           else if (th.closest('#statsTrigramTable')) { tableType = '3gram'; } 
+          else if (th.closest('#statsQuatgramTable')) { tableType = '4gram'; } // Added 4-gram table
           th.addEventListener("click", () => handleSort(th.dataset.sort, tableType));
       });
 
       // --- Clear Statistics Display ---
       function clearStatisticsDisplay() {
-         // ... (clearStatisticsDisplay remains the same)
          console.log("Clearing statistics display.");
          statsTotalCount.textContent = "0";
          statsVolumeChartContainer.innerHTML = '<p class="text-xs text-gray-500 italic text-center pt-4">Perform a search to generate volume chart.</p>';
@@ -1569,12 +1606,17 @@
          if (statsTrigramTableBody) { 
              statsTrigramTableBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 3-gram statistics.</td></tr>`;
          }
+         if (statsQuatgramTableBody) { // Added for 4-gram
+             statsQuatgramTableBody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 py-4">Perform a search to see 4-gram statistics.</td></tr>`;
+         }
+
          document.querySelectorAll('.wordCloudContainer').forEach(container => {
              const size = container.id.match(/(\d+)gram/)?.[1];
-             const type = size === '1' ? 'word' : size === '2' ? 'phrase' : 'triplet';
+             const type = size === '1' ? 'word' : size === '2' ? 'phrase' : (size === '3' ? 'triplet' : 'quartet');
              container.innerHTML = `<p class="wordCloudStatus text-center text-gray-500 p-4">Perform a search to generate ${type} cloud.</p>`;
          });
-         currentFrequencyData = { 1: [], 2: [], 3: [] };
+
+         currentFrequencyData = { 1: [], 2: [], 3: [], 4: [] }; // Ensure 4 is cleared
          document.querySelectorAll('.stats-table th[data-sort]').forEach((th) => { th.classList.remove("sorted-asc", "sorted-desc"); });
          statsError.classList.add('hidden'); statsError.textContent = '';
          currentNgramSize = 1; 
@@ -1624,7 +1666,29 @@
           searchButton.addEventListener("click", performSearch);
           searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") performSearch(); });
           verseTitleFilterInput.addEventListener("keypress", (e) => { if (e.key === "Enter") performSearch(); });
-          columnsByVolumeCheckbox.addEventListener("change", () => { console.log("Columns by Volume checkbox changed."); const hasResults = resultsContainer.hasChildNodes() && !noResultsMessage.classList.contains('hidden'); const hasActiveFilters = searchInput.value.trim() || verseTitleFilterInput.value.trim() || getSelectedVolumes().length < volumeCheckboxElements.length; if (hasResults) { console.log("Triggering search due to column change with existing results."); performSearch(); } else { console.log("Column view changed, but no results currently displayed. No search triggered."); resultsContainer.className = columnsByVolumeCheckbox.checked ? "results-flex-container" : "results-grid-container"; } });
+          
+          // Set default for shuffle
+          shuffleResultsCheckbox.checked = true;
+          console.log("Default: Shuffle Results enabled.");
+
+          // Set default for columns by volume
+          columnsByVolumeCheckbox.checked = true;
+          console.log("Default: Columns by Volume enabled.");
+          resultsContainer.className = "results-flex-container"; // Set initial class based on new default
+
+          columnsByVolumeCheckbox.addEventListener("change", () => { 
+            console.log("Columns by Volume checkbox changed."); 
+            const hasResults = scriptureCache.currentResults && scriptureCache.currentResults.length > 0;
+            if (hasResults) { 
+                console.log("Triggering search due to column change with existing results."); 
+                // Re-display with current search term and filters but new column setting
+                displayResults(scriptureCache.currentResults, searchInput.value.trim(), caseSensitiveCheckbox.checked, columnsByVolumeCheckbox.checked);
+            } else { 
+                console.log("Column view changed, but no results currently displayed. Only updating class."); 
+                resultsContainer.className = columnsByVolumeCheckbox.checked ? "results-flex-container" : "results-grid-container"; 
+            } 
+          });
+
           console.log("Triggering initial data load.");
           fetchScriptureData().catch((err) => { console.error("Initial data load failed:", err); });
           toggleAdvancedSearchArea(false);

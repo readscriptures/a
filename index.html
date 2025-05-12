@@ -1577,7 +1577,11 @@
 
     <script>
         // --- Constants ---
-        const HARDCODED_VOLUME_ORDER = ["Old Testament", "New Testament", "Book of Mormon", "Doctrine and Covenants", "Pearl of Great Price"];
+        const HARDCODED_VOLUME_ORDER = [
+            "Old Testament", "New Testament",
+            "Book of Mormon", "Doctrine and Covenants",
+            "Pearl of Great Price"
+        ];
 
         const VOLUME_ACRONYM_MAP = {
             "D&C": "Doctrine and Covenants",
@@ -1586,7 +1590,8 @@
             "OT": "Old Testament",
             "NT": "New Testament",
             "PoGP": "Pearl of Great Price",
-            "PGP": "Pearl of Great Price"
+            "PGP": "Pearl of Great Price",
+            "Ne": "Nephi"
         };
 
         const STOP_WORDS = new Set(["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"]);
@@ -3291,7 +3296,7 @@
             console.log("Default: Compact View", isMobile ? "enabled" : "disabled");
 
             shuffleResultsCheckbox.checked = !isMobile;
-            console.log("Default: Shuffle Results", isMobile ? "disabled" : "enabled");
+            console.log("Default: Shuffle Results", isMobile ? "enabled" : "disabled");
 
             columnsByVolumeCheckbox.checked = !isMobile;
             console.log("Default: Columns by Volume", isMobile ? "disabled" : "enabled");
@@ -3383,41 +3388,63 @@
             }
         }
 
-        // Add event delegation to both results container and context drawer
-        if (resultsContainer) {
-            resultsContainer.addEventListener('click', handleCompactActionTrigger);
-        }
-        if (contextDrawerContent) {
-            contextDrawerContent.addEventListener('click', handleCompactActionTrigger);
-        }
+        // Set up global event delegation for the compact action triggers
+        document.addEventListener('click', (event) => {
+            // First check if we clicked a compact action trigger
+            const actionTrigger = event.target.closest('.compact-card-action-trigger');
+            if (!actionTrigger) return;
 
-        if (isCompactView) {
-            const scriptureParagraph = document.createElement("p");
-            scriptureParagraph.className = "text-sm text-gray-700";
-            scriptureParagraph.innerHTML = highlightedText;
-            contentWrapper.appendChild(scriptureParagraph);
-        }
+            // Find the parent card that contains the verse data
+            const cardElement = actionTrigger.closest('.result-card');
+            if (!cardElement || !cardElement.dataset.verseData) {
+                console.error("Could not find verse data for compact action trigger");
+                return;
+            }
 
-        card.appendChild(contentWrapper);
+            try {
+                currentCompactActionVerse = JSON.parse(cardElement.dataset.verseData);
+
+                // Update modal content
+                compactActionModalVerseRef.textContent = currentCompactActionVerse.verse_title || "Selected Scripture";
+
+                // Update church site link
+                if (currentCompactActionVerse.book_title && currentCompactActionVerse.chapter_number && currentCompactActionVerse.verse_number) {
+                    compactActionChurchSiteLink.href = `https://www.churchofjesuschrist.org/search?facet=all&lang=eng&query=${encodeURIComponent(currentCompactActionVerse.book_title)}+${currentCompactActionVerse.chapter_number}%3A${currentCompactActionVerse.verse_number}`;
+                }
+
+                // Show the modal
+                openModal(compactActionModal);
+            } catch (e) {
+                console.error("Error handling compact action:", e);
+            }
+        });
 
 
         // --- Compact Action Modal Button Handlers ---
-        if (compactActionModalCloseButton) {
-            compactActionModalCloseButton.addEventListener("click", () => closeModal(compactActionModal));
-        }
-        if (compactActionModal) {
-            compactActionModal.addEventListener("click", (event) => {
-                if (event.target === compactActionModal) closeModal(compactActionModal);
-            });
-            // Add to existing Escape key handler
-            // document.addEventListener("keydown", (event) => {
-            // if (event.key === "Escape" && compactActionModal.classList.contains("active")) {
-            // closeModal(compactActionModal);
-            // }
-            // });
-        }
+        // Handle close button click
+        document.addEventListener('click', (event) => {
+            const closeButton = event.target.closest('#compactActionModalCloseButton');
+            if (closeButton) {
+                closeModal(compactActionModal);
+            }
+        });
+
+        // Handle modal overlay click
+        compactActionModal.addEventListener("click", (event) => {
+            if (event.target === compactActionModal) {
+                closeModal(compactActionModal);
+            }
+        });
+
+        // Add Escape key handler
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && compactActionModal.classList.contains("active")) {
+                closeModal(compactActionModal);
+            }
+        });
 
 
+        // Initialize compact action button handlers once
         if (compactActionCopyButton) {
             compactActionCopyButton.addEventListener('click', async () => {
                 if (!currentCompactActionVerse) return;
@@ -3497,7 +3524,7 @@
                 if (noteModal) {
                     noteModal.addEventListener('click', handleModalClick);
                 }
-                
+
                 showModal();
                 noteTextarea.value = '';
                 noteTextarea.focus();

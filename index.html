@@ -102,6 +102,7 @@
             max-height: 80vh;
             overflow-y: auto;
             position: relative;
+            margin-right: var(--column-spacing, 1rem);
         }
 
         .volume-column-header-area {
@@ -992,6 +993,10 @@
                                     class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" /><label
                                     for="shuffleResults" class="text-sm text-gray-700 cursor-pointer">Shuffle
                                     Results</label></div>
+                            <div class="flex gap-2 items-center"><input type="checkbox" id="compactView"
+                                    class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" /><label
+                                    for="compactView" class="text-sm text-gray-700 cursor-pointer">Compact View</label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1215,6 +1220,37 @@
                         </div>
                     </div>
                     <div id="statsError" class="text-red-600 text-sm mt-4 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Search History Button -->
+        <button id="searchHistoryButton"
+            class="fixed bottom-4 left-4 bg-indigo-600 text-white rounded-full p-4 shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-transform hover:scale-110 z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+        </button>
+
+        <!-- Search History Panel -->
+        <div id="searchHistorySection"
+            class="fixed bottom-0 left-0 w-full md:w-1/3 h-[50vh] bg-white shadow-lg rounded-t-lg transform translate-y-full transition-transform duration-300 ease-in-out z-40 overflow-hidden">
+            <div class="flex flex-col h-full">
+                <div class="flex justify-between items-center px-4 py-3 border-b">
+                    <h2 class="text-xl font-semibold text-gray-800">Search History</h2>
+                    <button id="closeSearchHistoryButton" class="text-gray-500 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex-grow overflow-y-auto p-4">
+                    <div id="searchHistoryList" class="space-y-3">
+                        <!-- Search history items will be inserted here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -1492,11 +1528,67 @@
             </div>
         </div>
 
+        <div id="compactActionModal" class="modal-overlay">
+            <div class="modal-box w-full max-w-md"> <button id="compactActionModalCloseButton"
+                    class="modal-close-button">&times;</button>
+                <h3 id="compactActionModalTitle" class="text-lg font-semibold mb-1 text-gray-800">Actions</h3>
+                <p id="compactActionModalVerseRef" class="text-sm text-gray-500 mb-4">[Verse Reference]</p>
+                <div class="space-y-2">
+                    <button id="compactActionCopyButton"
+                        class="w-full flex items-center space-x-2 p-3 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                        </svg>
+                        <span>Copy Scripture</span>
+                    </button>
+                    <button id="compactActionAddToJournalButton"
+                        class="w-full flex items-center space-x-2 p-3 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        <span>Add to Journal</span>
+                    </button>
+                    <button id="compactActionGoogleSearchButton"
+                        class="w-full flex items-center space-x-2 p-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                        <span>Search on Google</span>
+                    </button>
+                    <a id="compactActionChurchSiteLink" href="#" target="_blank" rel="noopener noreferrer"
+                        class="w-full flex items-center space-x-2 p-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                        </svg>
+                        <span>Search on Church Website</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
     </div> <!-- End of .container -->
 
     <script>
         // --- Constants ---
         const HARDCODED_VOLUME_ORDER = ["Old Testament", "New Testament", "Book of Mormon", "Doctrine and Covenants", "Pearl of Great Price"];
+
+        const VOLUME_ACRONYM_MAP = {
+            "D&C": "Doctrine and Covenants",
+            "BoM": "Book of Mormon",
+            "BofM": "Book of Mormon",
+            "OT": "Old Testament",
+            "NT": "New Testament",
+            "PoGP": "Pearl of Great Price",
+            "PGP": "Pearl of Great Price"
+        };
+
         const STOP_WORDS = new Set(["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"]);
         const WORD_CLOUD_LIMIT = 75;
         const RESULT_RENDER_LIMIT = 2000;
@@ -1513,6 +1605,8 @@
         let firstSearchPerformed = false;
         let currentNgramSize = 1;
         let wordCloudLayout = null;
+        let currentCompactActionVerse = null; // To store the active verse for the compact action modal
+
 
         // --- DOM Element References ---
         const volumeCheckboxesContainer = document.getElementById("volumeCheckboxes");
@@ -1582,6 +1676,15 @@
         const statsQuatgramTableBody = document.getElementById("statsQuatgramTableBody");
         const statsQuatgramTableHeaders = statsQuatgramTable.querySelectorAll("thead th[data-sort]");
         const statsError = document.getElementById("statsError");
+        const compactActionModal = document.getElementById("compactActionModal");
+        const compactActionModalCloseButton = document.getElementById("compactActionModalCloseButton");
+        const compactActionModalTitle = document.getElementById("compactActionModalTitle");
+        const compactActionModalVerseRef = document.getElementById("compactActionModalVerseRef");
+        // const compactActionModalScripturePreview = document.getElementById("compactActionModalScripturePreview"); // If you use the preview
+        const compactActionCopyButton = document.getElementById("compactActionCopyButton");
+        const compactActionAddToJournalButton = document.getElementById("compactActionAddToJournalButton");
+        const compactActionGoogleSearchButton = document.getElementById("compactActionGoogleSearchButton");
+        const compactActionChurchSiteLink = document.getElementById("compactActionChurchSiteLink");
 
         // Journal DOM Elements
         const journalEditor = document.getElementById("journalEditor");
@@ -1714,6 +1817,10 @@
                 fallbackMessage.textContent = "⚠️ Could not load full scripture data. Using limited fallback data.";
             }
 
+            function normalizeVolumeName(volumeName) {
+                return VOLUME_ACRONYM_MAP[volumeName] || volumeName;
+            }
+
             try {
                 scriptureCache.lds = data;
                 const foundVolumesSet = new Set();
@@ -1721,7 +1828,7 @@
 
                 data.forEach((verse) => {
                     if (verse && typeof verse.volume_title === "string" && typeof verse.book_title === "string") {
-                        const volumeTitle = verse.volume_title;
+                        const volumeTitle = normalizeVolumeName(verse.volume_title);
                         foundVolumesSet.add(volumeTitle);
                         if (!booksMap.has(volumeTitle)) booksMap.set(volumeTitle, new Set());
                         booksMap.get(volumeTitle).add(verse.book_title);
@@ -1940,7 +2047,26 @@
 
             let generatedRegexString = null; if (!useRegex && searchTerm) {const andMatch = searchTerm.match(/^(.*?)\s+AND\s+(.*?)$/i); const orMatch = searchTerm.match(/^(.*?)\s+OR\s+(.*?)$/i); if (andMatch) {const term1 = escapeRegex(andMatch[1].trim()); const term2 = escapeRegex(andMatch[2].trim()); generatedRegexString = `(${term1}.*?${term2}|${term2}.*?${term1})`; useRegex = true; wasAutoConverted = true; console.log("AND detected, using regex:", generatedRegexString);} else if (orMatch) {const term1 = escapeRegex(orMatch[1].trim()); const term2 = escapeRegex(orMatch[2].trim()); generatedRegexString = `(${term1}|${term2})`; useRegex = true; wasAutoConverted = true; console.log("OR detected, using regex:", generatedRegexString);} }
             let mainSearchRegex = null; if (useRegex && (searchTerm || generatedRegexString)) {try {const pattern = generatedRegexString || searchTerm; if (!pattern) throw new Error("Regex pattern is empty."); mainSearchRegex = new RegExp(pattern, isCaseSensitive ? "g" : "gi"); console.log("Main search regex compiled:", mainSearchRegex);} catch (e) {console.error("Invalid main search regex:", e); searchInputError.textContent = `Invalid Regex: ${e.message}`; return;} }
-            let verseTitleRegex = null; if (verseTitleFilterTerm) {try {verseTitleRegex = new RegExp(verseTitleFilterTerm, "i"); console.log("Verse title regex compiled:", verseTitleRegex);} catch (e) {console.error("Invalid verse title regex:", e); verseTitleFilterError.textContent = `Invalid Regex: ${e.message}`; return;} }
+            let verseTitleRegex = null;
+            if (verseTitleFilterTerm) {
+                try {
+                    // Create a regex pattern that handles volume name normalization
+                    let pattern = verseTitleFilterTerm;
+                    Object.entries(VOLUME_ACRONYM_MAP).forEach(([acronym, fullName]) => {
+                        // Escape special regex characters in both acronym and full name
+                        const escapedAcronym = escapeRegex(acronym);
+                        const escapedFullName = escapeRegex(fullName);
+                        // Replace acronym with a pattern that matches either acronym or full name
+                        pattern = pattern.replace(new RegExp(escapedAcronym, 'gi'), `(?:${escapedAcronym}|${escapedFullName})`);
+                    });
+                    verseTitleRegex = new RegExp(pattern, "i");
+                    console.log("Verse title regex compiled with volume normalization:", verseTitleRegex);
+                } catch (e) {
+                    console.error("Invalid verse title regex:", e);
+                    verseTitleFilterError.textContent = `Invalid Regex: ${e.message}`;
+                    return;
+                }
+            }
 
             loadingIndicator.classList.remove("hidden");
             resultsContainer.className = shouldDisplayColumns ? "results-flex-container" : "results-grid-container";
@@ -1989,6 +2115,7 @@
                         statsError.classList.remove('hidden');
                     }
                     if (!firstSearchPerformed) {firstSearchPerformed = true; console.log("First search performed flag set to true."); console.log("Collapsing advanced options after first search display."); toggleAdvancedSearchArea(true);}
+                    saveSearchSettings();
                 } else {
                     console.log("No matches found for criteria."); resultsContainer.className = "";
                     noResultsMessage.textContent = "No matches found for your criteria.";
@@ -2008,14 +2135,16 @@
         // --- Scripture Card Display Logic ---
         function createResultCard(verse, searchTerm, isCaseSensitive, isForContextDrawer = false) {
             const card = document.createElement("div");
-            card.className = "result-card flex flex-row overflow-hidden rounded-lg shadow-md bg-white border border-gray-200";
+            const isCompactView = document.getElementById("compactView")?.checked;
+            card.className = `result-card flex ${isCompactView ? 'flex-col' : 'flex-row'} overflow-hidden rounded-lg shadow-md bg-white border border-gray-200 ${isCompactView ? 'mb-0.5' : 'mb-3'}`;
 
-            // Main content area (left side)
+            // Main content area
             const contentWrapper = document.createElement("div");
-            contentWrapper.className = "flex-grow p-4 overflow-y-auto"; // p-4 for padding around text
+            contentWrapper.className = `flex-grow ${isCompactView ? 'p-2' : 'p-4'} overflow-y-auto relative`;
 
             const scriptureText = verse?.scripture_text ?? "[Scripture text missing]";
             const verseTitle = verse?.verse_title ?? "[Verse title missing]";
+
             const bookTitle = verse?.book_title ?? "[Book missing]";
             const chapterNum = verse?.chapter_number ?? "?";
             const verseNum = verse?.verse_number ?? "?";
@@ -2036,18 +2165,31 @@
                 }
             }
 
-            const headingElement = document.createElement("h3");
-            headingElement.className = "scripture-title-heading font-semibold text-base text-blue-800 mb-2";
-            headingElement.textContent = verseTitle;
-
-            if (!isForContextDrawer) {
-                headingElement.classList.add("clickable-heading", "hover:text-blue-600", "cursor-pointer");
-                headingElement.title = "Click to view context";
-                if (typeof openContextDrawer === 'function') {
-                    headingElement.addEventListener('click', () => openContextDrawer(verse));
+            if (isCompactView) {
+                const verseTitleDiv = document.createElement("div");
+                verseTitleDiv.className = "text-xs text-gray-400 text-center mb-1";
+                verseTitleDiv.textContent = verseTitle;
+                if (!isForContextDrawer) {
+                    verseTitleDiv.classList.add("clickable-heading", "hover:text-gray-600", "cursor-pointer");
+                    verseTitleDiv.title = "Click to view context";
+                    if (typeof openContextDrawer === 'function') {
+                        verseTitleDiv.addEventListener('click', () => openContextDrawer(verse));
+                    }
                 }
+                contentWrapper.appendChild(verseTitleDiv);
+            } else {
+                const headingElement = document.createElement("h3");
+                headingElement.className = "scripture-title-heading font-semibold text-base text-blue-800 mb-2";
+                headingElement.textContent = verseTitle;
+                if (!isForContextDrawer) {
+                    headingElement.classList.add("clickable-heading", "hover:text-blue-600", "cursor-pointer");
+                    headingElement.title = "Click to view context";
+                    if (typeof openContextDrawer === 'function') {
+                        headingElement.addEventListener('click', () => openContextDrawer(verse));
+                    }
+                }
+                contentWrapper.appendChild(headingElement);
             }
-            contentWrapper.appendChild(headingElement);
 
             const scriptureParagraph = document.createElement("p");
             scriptureParagraph.className = "text-sm text-gray-700";
@@ -2056,69 +2198,84 @@
 
             card.appendChild(contentWrapper); // Content added to card
 
-            // Buttons column (right side)
+            // Buttons section
+            // --- Buttons section ---
             const buttonsColumn = document.createElement("div");
-            // w-auto to shrink to content, p-1 for minimal padding around buttons,
-            // items-center to center buttons if they don't fill the column width (though they will with w-full)
-            buttonsColumn.className = "flex flex-col items-center justify-start p-1.5 space-y-1.5 bg-slate-50 border-l border-gray-200 w-auto flex-shrink-0";
+            // let buttonContainer; // Not needed if compact view doesn't have its own direct button container
 
-            const copyData = `> ${scriptureText} (${verseTitle})`;
-
-            // --- Create Buttons ---
-            // Common classes for icon-only buttons. p-1.5 for a tighter button.
-            const commonButtonClasses = "flex items-center justify-center p-1.5 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:bg-gray-200 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500";
-
-            // 1. Copy Button
-            const copyButton = document.createElement("button");
-            copyButton.className = `copy-button ${commonButtonClasses}`; // Make sure it uses commonButtonClasses
-            copyButton.title = "Copy scripture text and title";
-            copyButton.dataset.copy = escape(copyData);
-            copyButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+            if (isCompactView) {
+                // Simplified button column for compact view - just a trigger
+                card.classList.add('relative'); // Ensure card is a positioning context if needed
+                buttonsColumn.className = "absolute top-0.5 right-0.5 z-10"; // Small adjustment for padding
+                const menuButton = document.createElement("button");
+                // Add a specific class for this trigger to avoid conflicts with other menu buttons
+                menuButton.className = "p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md focus:outline-none compact-card-action-trigger";
+                menuButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
                 </svg>`;
-            buttonsColumn.appendChild(copyButton); // CRITICAL: Ensure it's appended to buttonsColumn
+                menuButton.title = "Actions";
+                // The verse data will be read from card.dataset.verseData in the event listener (see below)
+                buttonsColumn.appendChild(menuButton);
+            } else {
+                // Original non-compact button column layout (largely unchanged)
+                buttonsColumn.className = "flex flex-col items-center justify-start p-1.5 space-y-1.5 bg-slate-50 border-l border-gray-200 w-auto flex-shrink-0";
+                const buttonContainer = buttonsColumn; // Buttons are direct children
 
-            // 2. Add to Journal Button
-            const addJournalButton = document.createElement("button");
-            addJournalButton.className = `add-to-journal-button ${commonButtonClasses}`;
-            addJournalButton.title = "Add to Journal";
-            addJournalButton.dataset.verseTitle = escape(verseTitle);
-            addJournalButton.dataset.scriptureText = escape(scriptureText);
-            addJournalButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>`;
-            buttonsColumn.appendChild(addJournalButton);
+                const copyData = `> ${scriptureText} (${verseTitle})`;
+                const commonButtonClasses = "flex items-center justify-center p-1.5 bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:bg-gray-200 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500";
 
-            // 3. Search on Google Button
-            const searchGoogleButton = document.createElement("button");
-            searchGoogleButton.className = `${commonButtonClasses}`;
-            searchGoogleButton.title = "Search scripture text on Google";
-            searchGoogleButton.onclick = () => window.open(`https://www.google.com/search?q=${encodeURIComponent(scriptureText)}`, '_blank');
-            searchGoogleButton.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                </svg>`;
-            buttonsColumn.appendChild(searchGoogleButton);
+                const copyButton = document.createElement("button");
+                copyButton.className = `copy-button ${commonButtonClasses}`;
+                copyButton.title = "Copy scripture text and title";
+                copyButton.dataset.copy = escape(copyData);
+                copyButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                    </svg>`;
+                buttonContainer.appendChild(copyButton);
 
-            // 4. Search on Church Website Link (styled as a button)
-            const searchChurchSiteLink = document.createElement("a");
-            searchChurchSiteLink.className = `block ${commonButtonClasses}`;
-            searchChurchSiteLink.href = `https://www.churchofjesuschrist.org/search?facet=all&lang=eng&query=${encodeURIComponent(bookTitle)}+${chapterNum}%3A${verseNum}`;
-            searchChurchSiteLink.target = "_blank";
-            searchChurchSiteLink.rel = "noopener noreferrer";
-            searchChurchSiteLink.title = "Search verse on Church Website";
-            searchChurchSiteLink.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
-                </svg>`;
-            buttonsColumn.appendChild(searchChurchSiteLink);
+                const addJournalButton = document.createElement("button");
+                addJournalButton.className = `add-to-journal-button ${commonButtonClasses}`;
+                addJournalButton.title = "Add to Journal";
+                addJournalButton.dataset.verseTitle = escape(verseTitle);
+                addJournalButton.dataset.scriptureText = escape(scriptureText);
+                addJournalButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>`;
+                buttonContainer.appendChild(addJournalButton);
 
-            card.appendChild(buttonsColumn); // Buttons column added to card, AFTER contentWrapper
+                const searchGoogleButton = document.createElement("button");
+                searchGoogleButton.className = `${commonButtonClasses}`;
+                searchGoogleButton.title = "Search scripture text on Google";
+                searchGoogleButton.onclick = () => window.open(`https://www.google.com/search?q=${encodeURIComponent(scriptureText)}`, '_blank');
+                searchGoogleButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>`;
+                buttonContainer.appendChild(searchGoogleButton);
+
+                const searchChurchSiteLink = document.createElement("a");
+                searchChurchSiteLink.className = `block ${commonButtonClasses}`;
+                searchChurchSiteLink.href = `https://www.churchofjesuschrist.org/search?facet=all&lang=eng&query=${encodeURIComponent(bookTitle)}+${chapterNum}%3A${verseNum}`;
+                searchChurchSiteLink.target = "_blank";
+                searchChurchSiteLink.rel = "noopener noreferrer";
+                searchChurchSiteLink.title = "Search verse on Church Website";
+                searchChurchSiteLink.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                    </svg>`;
+                buttonContainer.appendChild(searchChurchSiteLink);
+            }
+            card.appendChild(buttonsColumn); // Add the (now simpler for compact) buttonsColumn
+
+            // Store verse data on the card element itself for easy retrieval by the delegated click handler
+            // Ensure 'verse' is the complete scripture object passed into createResultCard
+            card.dataset.verseData = JSON.stringify(verse);
 
             return card;
         }
+
         function displayResults(results, searchTerm, isCaseSensitive, displayColumns) {
             resultsContainer.innerHTML = "";
             resultsContainer.className = displayColumns ? "results-flex-container" : "results-grid-container";
@@ -2126,12 +2283,78 @@
 
             if (displayColumns) {
                 const resultsByVolume = results.reduce((acc, verse) => {if (verse && typeof verse.volume_title === "string") {const volume = verse.volume_title; if (!acc[volume]) acc[volume] = []; acc[volume].push(verse);} return acc;}, {});
-                const createVolumeColumn = (volumeName, verses) => {const columnDiv = document.createElement("div"); columnDiv.className = "volume-column"; const headerArea = document.createElement("div"); headerArea.className = "volume-column-header-area"; const header = document.createElement("h3"); header.textContent = volumeName; header.className = "volume-column-header"; headerArea.appendChild(header); const subheader = document.createElement("div"); subheader.textContent = `${verses.length} scripture${verses.length !== 1 ? "s" : ""}`; subheader.className = "volume-column-subheader"; headerArea.appendChild(subheader); columnDiv.appendChild(headerArea); const contentDiv = document.createElement("div"); contentDiv.className = "volume-column-content"; verses.forEach((verse) => {const card = createResultCard(verse, searchTerm, isCaseSensitive, false); contentDiv.appendChild(card);}); columnDiv.appendChild(contentDiv); return columnDiv;};
+                const createVolumeColumn = (volumeName, verses) => {
+                    const columnDiv = document.createElement("div");
+                    columnDiv.className = "volume-column";
+
+                    const headerArea = document.createElement("div");
+                    headerArea.className = "volume-column-header-area";
+
+                    const header = document.createElement("h3");
+                    header.textContent = volumeName;
+                    header.className = "volume-column-header";
+                    headerArea.appendChild(header);
+
+                    const subheader = document.createElement("div");
+                    subheader.textContent = `${verses.length} scripture${verses.length !== 1 ? "s" : ""}`;
+                    subheader.className = "volume-column-subheader";
+                    headerArea.appendChild(subheader);
+
+                    columnDiv.appendChild(headerArea);
+
+                    const contentDiv = document.createElement("div");
+                    contentDiv.className = "volume-column-content";
+
+                    verses.forEach((verse) => {
+                        try {
+                            const card = createResultCard(verse, searchTerm, isCaseSensitive, false);
+                            if (card && card instanceof Element) {
+                                contentDiv.appendChild(card);
+                            } else {
+                                console.error("Invalid card element created for verse:", verse);
+                            }
+                        } catch (err) {
+                            console.error("Error creating card for verse:", verse, err);
+                        }
+                    });
+
+                    columnDiv.appendChild(contentDiv);
+                    return columnDiv;
+                };
                 HARDCODED_VOLUME_ORDER.forEach((volumeName) => {if (resultsByVolume[volumeName]?.length > 0) {const column = createVolumeColumn(volumeName, resultsByVolume[volumeName]); resultsContainer.appendChild(column); delete resultsByVolume[volumeName];} });
                 Object.keys(resultsByVolume).sort().forEach((volumeName) => {if (resultsByVolume[volumeName].length > 0) {const column = createVolumeColumn(volumeName, resultsByVolume[volumeName]); resultsContainer.appendChild(column);} });
             } else {
-                results.forEach((verse) => {const card = createResultCard(verse, searchTerm, isCaseSensitive, false); resultsContainer.appendChild(card);});
+                const fragment = document.createDocumentFragment();
+                results.forEach((verse) => {
+                    const card = createResultCard(verse, searchTerm, isCaseSensitive, false);
+                    fragment.appendChild(card);
+                });
+                resultsContainer.appendChild(fragment);
             }
+
+            // Global event delegation for menus (outside the display condition)
+            resultsContainer.addEventListener('click', (e) => {
+                const menuButton = e.target.closest('.card-menu-button');
+                if (menuButton) {
+                    e.stopPropagation();
+                    const allMenus = document.querySelectorAll('.card-menu:not(.hidden)');
+                    allMenus.forEach(menu => {
+                        if (menu !== menuButton.nextElementSibling) {
+                            menu.classList.add('hidden');
+                        }
+                    });
+                    const dropdown = menuButton.nextElementSibling;
+                    dropdown.classList.toggle('hidden');
+                }
+            });
+
+            resultsContainer.addEventListener('mouseleave', (e) => {
+                const card = e.target.closest('.result-card');
+                if (card) {
+                    const menu = card.querySelector('.card-menu');
+                    if (menu) menu.classList.add('hidden');
+                }
+            }, true);
         }
 
         // --- Context Drawer Logic ---
@@ -2956,6 +3179,101 @@
         });
 
 
+        // --- Search History Management ---
+        const MAX_SEARCH_HISTORY = 5;
+        let searchHistory = [];
+
+        function saveSearchSettings() {
+            const settings = {
+                searchTerm: searchInput.value.trim(),
+                verseTitleFilter: verseTitleFilterInput.value.trim(),
+                useRegex: regexSearchCheckbox.checked,
+                caseSensitive: caseSensitiveCheckbox.checked,
+                columnsByVolume: columnsByVolumeCheckbox.checked,
+                shuffleResults: shuffleResultsCheckbox.checked,
+                selectedVolumes: getSelectedVolumes(),
+                timestamp: new Date().toISOString()
+            };
+
+            searchHistory.unshift(settings);
+            if (searchHistory.length > MAX_SEARCH_HISTORY) {
+                searchHistory.pop();
+            }
+            updateSearchHistoryDisplay();
+        }
+
+        function updateSearchHistoryDisplay() {
+            const historyList = document.getElementById('searchHistoryList');
+            historyList.innerHTML = '';
+
+            searchHistory.forEach((settings, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'bg-gray-50 p-4 rounded-lg shadow hover:bg-gray-100 cursor-pointer';
+
+                const timeAgo = new Date(settings.timestamp).toLocaleString();
+
+                historyItem.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-grow">
+                            <div class="font-semibold text-gray-900">${settings.searchTerm || '(empty search)'}</div>
+                            <div class="text-sm text-gray-600">
+                                ${settings.verseTitleFilter ? `Title Filter: ${settings.verseTitleFilter}<br>` : ''}
+                                Regex: ${settings.useRegex ? '✓' : '✗'} | 
+                                Case Sensitive: ${settings.caseSensitive ? '✓' : '✗'} |
+                                Selected Volumes: ${settings.selectedVolumes.length}
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">${timeAgo}</div>
+                        </div>
+                    </div>
+                `;
+
+                historyItem.addEventListener('click', () => {
+                    applySearchSettings(settings);
+                });
+
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        function applySearchSettings(settings) {
+            searchInput.value = settings.searchTerm;
+            verseTitleFilterInput.value = settings.verseTitleFilter;
+            regexSearchCheckbox.checked = settings.useRegex;
+            caseSensitiveCheckbox.checked = settings.caseSensitive;
+            columnsByVolumeCheckbox.checked = settings.columnsByVolume;
+            shuffleResultsCheckbox.checked = settings.shuffleResults;
+
+            // Reset all volume checkboxes first
+            volumeCheckboxElements.forEach(checkbox => {
+                checkbox.checked = settings.selectedVolumes.includes(checkbox.value);
+            });
+            updateAllVolumesCheckboxState();
+
+            toggleSearchHistoryPanel(false);
+            performSearch();
+        }
+
+        // Search History Panel Toggle
+        const searchHistoryButton = document.getElementById("searchHistoryButton");
+        const closeSearchHistoryButton = document.getElementById("closeSearchHistoryButton");
+        const searchHistorySection = document.getElementById("searchHistorySection");
+
+        function toggleSearchHistoryPanel(show = null) {
+            const isHidden = searchHistorySection.classList.contains("translate-y-full");
+            const shouldShow = show !== null ? show : isHidden;
+
+            if (shouldShow) {
+                searchHistorySection.classList.remove("translate-y-full");
+                searchHistoryButton.classList.add("hidden");
+            } else {
+                searchHistorySection.classList.add("translate-y-full");
+                searchHistoryButton.classList.remove("hidden");
+            }
+        }
+
+        searchHistoryButton.addEventListener("click", () => toggleSearchHistoryPanel(true));
+        closeSearchHistoryButton.addEventListener("click", () => toggleSearchHistoryPanel(false));
+
         // --- Initial Setup ---
         document.addEventListener("DOMContentLoaded", function () {
             console.log("DOM Loaded. Setting up event listeners.");
@@ -2963,12 +3281,42 @@
             searchInput.addEventListener("keypress", (e) => {if (e.key === "Enter") performSearch();});
             verseTitleFilterInput.addEventListener("keypress", (e) => {if (e.key === "Enter") performSearch();});
 
-            shuffleResultsCheckbox.checked = true;
-            console.log("Default: Shuffle Results enabled.");
+            // Detect if device is mobile
+            const isMobile = window.matchMedia("(max-width: 768px)").matches;
+            console.log("Device detection:", isMobile ? "Mobile" : "Desktop");
 
-            columnsByVolumeCheckbox.checked = true;
-            console.log("Default: Columns by Volume enabled.");
-            resultsContainer.className = "results-flex-container";
+            // Set defaults based on device type
+            const compactViewCheckbox = document.getElementById("compactView");
+            compactViewCheckbox.checked = isMobile;
+            console.log("Default: Compact View", isMobile ? "enabled" : "disabled");
+
+            shuffleResultsCheckbox.checked = !isMobile;
+            console.log("Default: Shuffle Results", isMobile ? "disabled" : "enabled");
+
+            columnsByVolumeCheckbox.checked = !isMobile;
+            console.log("Default: Columns by Volume", isMobile ? "disabled" : "enabled");
+            resultsContainer.className = !isMobile ? "results-flex-container" : "results-grid-container";
+
+            let compactViewDebounceTimeout;
+
+            compactViewCheckbox.addEventListener("change", () => {
+                // Update CSS variable immediately for smooth transition
+                document.documentElement.style.setProperty('--column-spacing', compactViewCheckbox.checked ? '0.25rem' : '1rem');
+
+                // Add compact class to container for immediate feedback
+                resultsContainer.classList.toggle('compact-mode', compactViewCheckbox.checked);
+
+                // Debounce the heavy re-rendering
+                clearTimeout(compactViewDebounceTimeout);
+                compactViewDebounceTimeout = setTimeout(() => {
+                    if (scriptureCache.currentResults && scriptureCache.currentResults.length > 0) {
+                        // Batch DOM updates
+                        requestAnimationFrame(() => {
+                            displayResults(scriptureCache.currentResults, searchInput.value.trim(), caseSensitiveCheckbox.checked, columnsByVolumeCheckbox.checked);
+                        });
+                    }
+                }, 150); // Debounce delay
+            });
 
             columnsByVolumeCheckbox.addEventListener("change", () => {
                 console.log("Columns by Volume checkbox changed.");
@@ -2991,6 +3339,188 @@
             populateStopWordsModal();
             updateJournalPreview(); // Initial call to set placeholder if empty
         });
+
+
+        // --- Event Listener for Compact Card Action Trigger ---
+        // Helper function to handle compact action triggers
+        function handleCompactActionTrigger(event) {
+            const actionTrigger = event.target.closest('.compact-card-action-trigger');
+            if (actionTrigger) {
+                event.stopPropagation(); // Prevent other click listeners if any
+
+                const cardElement = actionTrigger.closest('.result-card');
+                if (!cardElement || !cardElement.dataset.verseData) {
+                    console.error("Could not find verse data for compact action trigger.");
+                    return;
+                }
+                try {
+                    currentCompactActionVerse = JSON.parse(cardElement.dataset.verseData);
+                } catch (e) {
+                    console.error("Error parsing verse data from card for compact action:", e, cardElement.dataset.verseData);
+                    currentCompactActionVerse = null; // Ensure it's null if parsing fails
+                    return;
+                }
+
+                if (!currentCompactActionVerse) {
+                    console.error("currentCompactActionVerse is not set properly after parsing.");
+                    return;
+                }
+
+                // Populate and show the compact action modal
+                if (compactActionModalTitle) { // Title of the modal itself
+                    compactActionModalTitle.textContent = `Actions for:`; // Generic title
+                }
+                if (compactActionModalVerseRef) { // Specific element for the verse reference
+                    compactActionModalVerseRef.textContent = currentCompactActionVerse.verse_title || "Selected Scripture";
+                }
+
+                // Dynamically set the Church Site link href when opening the modal
+                if (compactActionChurchSiteLink && currentCompactActionVerse.book_title && currentCompactActionVerse.chapter_number && currentCompactActionVerse.verse_number) {
+                    compactActionChurchSiteLink.href = `https://www.churchofjesuschrist.org/search?facet=all&lang=eng&query=${encodeURIComponent(currentCompactActionVerse.book_title)}+${currentCompactActionVerse.chapter_number}%3A${currentCompactActionVerse.verse_number}`;
+                }
+
+                openModal(compactActionModal);
+            }
+        }
+
+        // Add event delegation to both results container and context drawer
+        if (resultsContainer) {
+            resultsContainer.addEventListener('click', handleCompactActionTrigger);
+        }
+        if (contextDrawerContent) {
+            contextDrawerContent.addEventListener('click', handleCompactActionTrigger);
+        }
+
+        if (isCompactView) {
+            const scriptureParagraph = document.createElement("p");
+            scriptureParagraph.className = "text-sm text-gray-700";
+            scriptureParagraph.innerHTML = highlightedText;
+            contentWrapper.appendChild(scriptureParagraph);
+        }
+
+        card.appendChild(contentWrapper);
+
+
+        // --- Compact Action Modal Button Handlers ---
+        if (compactActionModalCloseButton) {
+            compactActionModalCloseButton.addEventListener("click", () => closeModal(compactActionModal));
+        }
+        if (compactActionModal) {
+            compactActionModal.addEventListener("click", (event) => {
+                if (event.target === compactActionModal) closeModal(compactActionModal);
+            });
+            // Add to existing Escape key handler
+            // document.addEventListener("keydown", (event) => {
+            // if (event.key === "Escape" && compactActionModal.classList.contains("active")) {
+            // closeModal(compactActionModal);
+            // }
+            // });
+        }
+
+
+        if (compactActionCopyButton) {
+            compactActionCopyButton.addEventListener('click', async () => {
+                if (!currentCompactActionVerse) return;
+                const textToCopy = `> ${currentCompactActionVerse.scripture_text} (${currentCompactActionVerse.verse_title})`;
+                const originalButtonHTML = compactActionCopyButton.innerHTML;
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    showButtonFeedback(compactActionCopyButton, '<span class="flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-400"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg><span>Copied!</span></span>', 1500);
+                } catch (err) {
+                    console.error("Compact action: Failed to copy text: ", err);
+                    showButtonFeedback(compactActionCopyButton, '<span class="flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-red-400"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg><span>Error</span></span>', 1500);
+                }
+                closeModal(compactActionModal);
+            });
+        }
+
+        if (compactActionAddToJournalButton) {
+            compactActionAddToJournalButton.addEventListener('click', () => {
+                if (!currentCompactActionVerse) return;
+
+                // Populate and show the original noteModal for adding a note
+                if (modalScriptureTextEl) modalScriptureTextEl.textContent = currentCompactActionVerse.scripture_text;
+                if (modalVerseTitleEl) modalVerseTitleEl.textContent = currentCompactActionVerse.verse_title;
+
+                // Create handlers that will be cleaned up
+                const handleSaveNote = () => {
+                    const userNote = noteTextarea.value.trim();
+                    let appendedNote = `> ${currentCompactActionVerse.scripture_text} (${currentCompactActionVerse.verse_title})`;
+                    if (userNote) {
+                        appendedNote = `${userNote}\n${appendedNote}`;
+                    }
+                    if (journalEditor.value) {
+                        appendedNote = `\n\n${appendedNote}`;
+                    }
+                    journalEditor.value += appendedNote;
+                    updateJournalPreview();
+                    journalEditor.scrollTop = journalEditor.scrollHeight;
+                    cleanupListeners();
+                    hideModal();
+                };
+
+                const handleKeydown = (e) => {
+                    if (e.key === 'Enter' && e.shiftKey) {
+                        e.preventDefault();
+                        handleSaveNote();
+                    }
+                };
+
+                const handleCancelNote = () => {
+                    cleanupListeners();
+                    hideModal();
+                };
+
+                const cleanupListeners = () => {
+                    noteTextarea.removeEventListener('keydown', handleKeydown);
+                    saveNoteButton.removeEventListener('click', handleSaveNote);
+                    if (modalCloseButton) {
+                        modalCloseButton.removeEventListener('click', handleCancelNote);
+                    }
+                    if (noteModal) {
+                        noteModal.removeEventListener('click', handleModalClick);
+                    }
+                };
+
+                const handleModalClick = (e) => {
+                    if (e.target === noteModal) {
+                        handleCancelNote();
+                    }
+                };
+
+                // Add all event listeners
+                noteTextarea.addEventListener('keydown', handleKeydown);
+                saveNoteButton.addEventListener('click', handleSaveNote);
+                if (modalCloseButton) {
+                    modalCloseButton.addEventListener('click', handleCancelNote);
+                }
+                if (noteModal) {
+                    noteModal.addEventListener('click', handleModalClick);
+                }
+                
+                showModal();
+                noteTextarea.value = '';
+                noteTextarea.focus();
+                closeModal(compactActionModal);
+            });
+        }
+
+        if (compactActionGoogleSearchButton) {
+            compactActionGoogleSearchButton.addEventListener('click', () => {
+                if (!currentCompactActionVerse || !currentCompactActionVerse.scripture_text) return;
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(currentCompactActionVerse.scripture_text)}`, '_blank');
+                closeModal(compactActionModal);
+            });
+        }
+
+        // For compactActionChurchSiteLink, the href is set when the modal opens.
+        // You might want to add closeModal(compactActionModal) here too if preferred.
+        if (compactActionChurchSiteLink) {
+            compactActionChurchSiteLink.addEventListener('click', () => {
+                // Allow a moment for the new tab to open before closing.
+                setTimeout(() => closeModal(compactActionModal), 100);
+            });
+        }
     </script>
 </body>
 

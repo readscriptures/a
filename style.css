@@ -1,10 +1,20 @@
         /* Styles from previous version remain largely the same */
-        body {
-            font-family: "Inter", sans-serif;
-            background-color: #f8fafc;
-            /* slate-50 */
-            line-height: 1.6;
-        }
+body {
+    font-family: "Inter", sans-serif;
+    background-color: #f8fafc;
+    /* slate-50 */
+    line-height: 1.6;
+}
+
+body.dark-mode {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+body.dark-mode img,
+body.dark-mode video,
+body.dark-mode svg {
+    filter: invert(1) hue-rotate(180deg);
+}
 
         .container {
             max-width: 100%;

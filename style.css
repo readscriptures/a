@@ -885,3 +885,13 @@
         #journalPreview a:hover {
             color: #2563eb;
         }
+
+        /* Temporary message shown when clicking the seek button */
+        #seekMessage {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #seekMessage.show {
+            opacity: 1;
+        }

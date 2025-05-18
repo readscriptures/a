@@ -33,6 +33,7 @@
         let currentNgramSize = 1;
         let wordCloudLayout = null;
         let currentCompactActionVerse = null; // To store the active verse for the compact action modal
+        let seekScriptures = [];
 
 
         // --- DOM Element References ---
@@ -47,6 +48,7 @@
         const columnsByVolumeCheckbox = document.getElementById("columnsByVolume");
         const shuffleResultsCheckbox = document.getElementById("shuffleResults");
         const searchButton = document.getElementById("searchButton");
+        const seekMessage = document.getElementById("seekMessage");
         const loadingIndicator = document.getElementById("loadingIndicator");
         const resultsContainer = document.getElementById("resultsContainer");
         const noResultsMessage = document.getElementById("noResults");
@@ -173,6 +175,24 @@
                 buttonElement.innerHTML = originalHTML;
             }, timeoutDuration);
             console.log(`Button feedback shown for ${timeoutDuration}ms: ${feedbackHTML}`)
+        }
+
+        async function showSeekScripture() {
+            try {
+                if (seekScriptures.length === 0) {
+                    const resp = await fetch('assets/seek-scriptures.json');
+                    seekScriptures = await resp.json();
+                }
+                if (!Array.isArray(seekScriptures) || seekScriptures.length === 0) return;
+                const random = seekScriptures[Math.floor(Math.random() * seekScriptures.length)];
+                seekMessage.textContent = random;
+                seekMessage.classList.add('show');
+                setTimeout(() => {
+                    seekMessage.classList.remove('show');
+                }, 2000);
+            } catch (err) {
+                console.error('Error loading seek scriptures', err);
+            }
         }
 
         // --- Note Modal Helper Functions ---
@@ -459,7 +479,9 @@
             searchButton.innerHTML = 'and ye shall find';
             setTimeout(() => {
                 searchButton.innerHTML = originalHTML;
-            }, 2000)
+            }, 2000);
+
+            showSeekScripture();
 
             if (firstSearchPerformed) {console.log("Collapsing advanced options after subsequent search."); toggleAdvancedSearchArea(true);}
             else {console.log("First search, not collapsing advanced options yet.");}

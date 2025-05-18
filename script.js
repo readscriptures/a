@@ -117,6 +117,10 @@
         const copyJournalButton = document.getElementById("copyJournalButton");
         const clearJournalButton = document.getElementById("clearJournalButton");
 
+        // Dark Mode Toggle Elements
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        const darkModeIcon = document.getElementById("darkModeIcon");
+
         // --- Modal Elements ---
         const noteModal = document.getElementById('noteModal');
         const modalScriptureTextEl = document.getElementById('modalScriptureText');
@@ -1877,16 +1881,22 @@
                 document.documentElement.style.setProperty('--results-columns', columns);
             });
 
-            console.log("Triggering initial data load.");
-            fetchScriptureData().catch((err) => {console.error("Initial data load failed:", err);});
-            toggleAdvancedSearchArea(false);
-            clearStatisticsDisplay();
-            populateStopWordsModal();
-            updateJournalPreview(); // Initial call to set placeholder if empty
+            // Setup Dark Mode Toggle
+            const savedDark = localStorage.getItem('darkMode') === 'true';
+            if (savedDark) {
+                document.body.classList.add('dark-mode');
+                if (darkModeIcon) darkModeIcon.textContent = 'Light';
+            }
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    const isDark = document.body.classList.contains('dark-mode');
+                    if (darkModeIcon) darkModeIcon.textContent = isDark ? 'Light' : 'Dark';
+                    localStorage.setItem('darkMode', isDark);
+                });
+            }
 
-            // Fade out the floating help button after 3 seconds
-            setTimeout(() => {
-                howToSearchButton.classList.add('opacity-0', 'pointer-events-none');
+            howToSearchButton.classList.add('opacity-0', 'pointer-events-none');
             }, 3000);
         });
 

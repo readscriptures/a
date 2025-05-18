@@ -1771,10 +1771,14 @@
 
         function handleCFMFilterChange() {
             if (!cfmCheckbox || !cfmSelect) return;
-            
+
             cfmSelect.disabled = !cfmCheckbox.checked;
-            
+
             if (cfmCheckbox.checked && cfmSchedule) {
+                // Disable random sort and volume columns for a smooth reading experience
+                shuffleResultsCheckbox.checked = false;
+                columnsByVolumeCheckbox.checked = false;
+
                 const selectedWeek = cfmSchedule[parseInt(cfmSelect.value)];
                 if (selectedWeek) {
                     verseTitleFilterInput.value = selectedWeek.verse_title;

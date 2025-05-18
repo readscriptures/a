@@ -1920,14 +1920,17 @@
         stopWordsModalOverlay.addEventListener("click", (event) => {if (event.target === stopWordsModalOverlay) closeModal(stopWordsModalOverlay);});
         contextDrawerCloseButton.addEventListener("click", () => closeModal(contextDrawerOverlay));
         contextDrawerOverlay.addEventListener("click", (event) => {if (event.target === contextDrawerOverlay) closeModal(contextDrawerOverlay);});
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") {
+        function handleGlobalEscape(event) {
+            if (event.key === 'Escape') {
                 if (searchHelpModalOverlay.classList.contains("active")) closeModal(searchHelpModalOverlay);
                 if (statsHelpModalOverlay.classList.contains("active")) closeModal(statsHelpModalOverlay);
                 if (stopWordsModalOverlay.classList.contains("active")) closeModal(stopWordsModalOverlay);
                 if (contextDrawerOverlay.classList.contains("active")) closeModal(contextDrawerOverlay);
+                if (noteModal && noteModal.classList.contains("active")) hideModal();
+                if (compactActionModal && compactActionModal.classList.contains("active")) closeModal(compactActionModal);
             }
-        });
+        }
+        document.addEventListener('keydown', handleGlobalEscape);
 
         // --- Advanced Search Area Collapse/Expand ---
         function toggleAdvancedSearchArea(forceCollapse = null) {
@@ -3076,25 +3079,7 @@
 
             }
         });
-        // Optional: Close modal with Escape key
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") {
-                if (searchHelpModalOverlay.classList.contains("active")) closeModal(searchHelpModalOverlay);
-                if (statsHelpModalOverlay.classList.contains("active")) closeModal(statsHelpModalOverlay);
-                if (stopWordsModalOverlay.classList.contains("active")) closeModal(stopWordsModalOverlay);
-                if (contextDrawerOverlay.classList.contains("active")) closeModal(contextDrawerOverlay);
-
-                // Check for the noteModal
-                if (noteModal && noteModal.classList.contains("active")) {
-                    console.log("Escape key: Hiding noteModal");
-                    hideModal(); // Calls the global hideModal
-                    // If hideModal doesn't clean up specific listeners from save/cancel buttons
-                    // added within the addToJournalButton click, and those buttons were NOT {once:true},
-                    // you might need to manually trigger their cleanup here.
-                    // But since we are using {once:true}, this should be fine.
-                }
-            }
-        });
+        // Optional: Close modal with Escape key handled globally
         // --- Populate Stop Words Modal ---
         function populateStopWordsModal() {
             stopWordsListDisplay.innerHTML = '';
@@ -3542,12 +3527,7 @@
             }
         });
 
-        // Add Escape key handler
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape" && compactActionModal.classList.contains("active")) {
-                closeModal(compactActionModal);
-            }
-        });
+        // Escape key handling is registered globally
 
 
         // Initialize compact action button handlers once

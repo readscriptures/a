@@ -1745,6 +1745,8 @@
             const currentWeek = cfmSchedule.findIndex(week => {
                 const start = new Date(week.start_date);
                 const end = new Date(week.end_date);
+                // include the entire end date so selection works late on the last day
+                end.setHours(23, 59, 59, 999);
                 return today >= start && today <= end;
             });
             

@@ -47,6 +47,7 @@
         const caseSensitiveCheckbox = document.getElementById("caseSensitive");
         const columnsByVolumeCheckbox = document.getElementById("columnsByVolume");
         const shuffleResultsCheckbox = document.getElementById("shuffleResults");
+        const singleColumnCheckbox = document.getElementById("singleColumn");
         const searchButton = document.getElementById("searchButton");
         const seekMessage = document.getElementById("seekMessage");
         const loadingIndicator = document.getElementById("loadingIndicator");
@@ -1778,6 +1779,8 @@
                 // Disable random sort and volume columns for a smooth reading experience
                 shuffleResultsCheckbox.checked = false;
                 columnsByVolumeCheckbox.checked = false;
+                singleColumnCheckbox.checked = true;
+                document.documentElement.style.setProperty('--results-columns', '1');
 
                 const selectedWeek = cfmSchedule[parseInt(cfmSelect.value)];
                 if (selectedWeek) {
@@ -1787,6 +1790,10 @@
                     }
                     performSearch();
                 }
+            }
+            if (!cfmCheckbox.checked) {
+                singleColumnCheckbox.checked = false;
+                document.documentElement.style.setProperty('--results-columns', '4');
             }
         }
 
@@ -1828,6 +1835,8 @@
 
             columnsByVolumeCheckbox.checked = !isMobile;
             console.log("Default: Columns by Volume", isMobile ? "disabled" : "enabled");
+            singleColumnCheckbox.checked = false;
+            document.documentElement.style.setProperty('--results-columns', '4');
             resultsContainer.className = !isMobile ? "results-flex-container" : "results-grid-container";
 
             let compactViewDebounceTimeout;
@@ -1861,6 +1870,11 @@
                     console.log("Column view changed, but no results currently displayed. Only updating class.");
                     resultsContainer.className = columnsByVolumeCheckbox.checked ? "results-flex-container" : "results-grid-container";
                 }
+            });
+
+            singleColumnCheckbox.addEventListener("change", () => {
+                const columns = singleColumnCheckbox.checked ? '1' : '4';
+                document.documentElement.style.setProperty('--results-columns', columns);
             });
 
             console.log("Triggering initial data load.");

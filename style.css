@@ -125,9 +125,13 @@
         }
 
         /* Grid layout styles */
+        :root {
+            --results-columns: 4;
+        }
+
         .results-grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(var(--results-columns), minmax(0, 1fr));
             gap: 1rem;
             max-width: 1400px;
             margin-left: auto;

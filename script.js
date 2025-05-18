@@ -1724,9 +1724,14 @@
             }
         }
 
+        function parseDateLocal(dateString) {
+            const [year, month, day] = dateString.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+
         function formatDateRange(startDate, endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
+            const start = parseDateLocal(startDate);
+            const end = parseDateLocal(endDate);
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             return `${months[start.getMonth()]} ${start.getDate()}-${end.getDate()}`;
         }
@@ -1743,8 +1748,8 @@
             // Set current week
             const today = new Date();
             const currentWeek = cfmSchedule.findIndex(week => {
-                const start = new Date(week.start_date);
-                const end = new Date(week.end_date);
+                const start = parseDateLocal(week.start_date);
+                const end = parseDateLocal(week.end_date);
                 // include the entire end date so selection works late on the last day
                 end.setHours(23, 59, 59, 999);
                 return today >= start && today <= end;

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const assert = require('assert');
 
-const jsonPath = 'lds-scriptures.json';
+const jsonPath = 'assets/lds-scriptures.json';
 const raw = fs.readFileSync(jsonPath, 'utf8');
 let data;
 try {

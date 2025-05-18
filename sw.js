@@ -4,8 +4,8 @@ const URLS_TO_CACHE = [
   'index.html',
   'style.css',
   'script.js',
-  'lds-scriptures.json',
-  'cfm2026.json',
+  'assets/lds-scriptures.json',
+  'assets/cfm2026.json',
   'assets/seek-scriptures.json'
 ];
 

@@ -243,7 +243,7 @@
             let usingFallback = false;
 
             try {
-                const response = await fetch("lds-scriptures.json");
+                const response = await fetch("assets/lds-scriptures.json");
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -1725,7 +1725,7 @@
 
         async function loadCFMSchedule() {
             try {
-                const response = await fetch('cfm2026.json');
+                const response = await fetch('assets/cfm2026.json');
                 cfmSchedule = await response.json();
                 return cfmSchedule;
             } catch (error) {

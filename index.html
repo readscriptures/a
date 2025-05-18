@@ -3325,7 +3325,7 @@
 
         function updateCFMSelect() {
             if (!cfmSchedule || !cfmSelect) return;
-            
+
             cfmSelect.innerHTML = cfmSchedule.map((week, index) => {
                 const dateRange = formatDateRange(week.start_date, week.end_date);
                 const reading = week.verse_title.replace(/\[|\]/g, '');
@@ -3339,18 +3339,24 @@
                 const end = new Date(week.end_date);
                 return today >= start && today <= end;
             });
-            
+
             if (currentWeek !== -1) {
                 cfmSelect.value = currentWeek.toString();
+                cfmSelect.dataset.currentWeek = currentWeek.toString();
             }
         }
 
         function handleCFMFilterChange() {
             if (!cfmCheckbox || !cfmSelect) return;
-            
+
             cfmSelect.disabled = !cfmCheckbox.checked;
-            
+
             if (cfmCheckbox.checked && cfmSchedule) {
+                const currentWeek = cfmSelect.dataset.currentWeek;
+                if (currentWeek) {
+                    cfmSelect.value = currentWeek;
+                }
+
                 const selectedWeek = cfmSchedule[parseInt(cfmSelect.value)];
                 if (selectedWeek) {
                     verseTitleFilterInput.value = selectedWeek.verse_title;

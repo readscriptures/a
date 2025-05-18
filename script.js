@@ -1838,6 +1838,11 @@
             clearStatisticsDisplay();
             populateStopWordsModal();
             updateJournalPreview(); // Initial call to set placeholder if empty
+
+            // Fade out the floating help button after 3 seconds
+            setTimeout(() => {
+                howToSearchButton.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
         });
 
 

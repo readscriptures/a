@@ -26,12 +26,6 @@
             </p>
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
         </div>
-        <div class="flex justify-center mb-4 space-x-4">
-            <button id="howToSearchButton" title="How to Search"
-                class="inline-flex items-center p-2 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <span>💡 How do I use this?</span>
-            </button>
-        </div>
 
         <div id="searchSection" class="mb-8 max-w-4xl mx-auto">
             <div class="flex gap-2 items-start">
@@ -348,6 +342,12 @@
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
+        </button>
+
+        <!-- Temporary Floating Help Button -->
+        <button id="howToSearchButton" title="How to Search"
+            class="fixed top-4 right-4 bg-gray-600 text-white rounded-full p-3 shadow-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-opacity duration-1000 transition-transform hover:scale-110 z-50">
+            <span class="text-lg font-semibold">?</span>
         </button>
 
         <!-- Search History Panel -->

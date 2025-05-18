@@ -68,12 +68,6 @@
         const contextDrawerTitle = document.getElementById("contextDrawerTitle");
         const contextDrawerContent = document.getElementById("contextDrawerContent");
         const advancedSearchArea = document.getElementById("advancedSearchArea");
-        const toggleAdvancedSearchButton = document.getElementById("toggleAdvancedSearchButton");
-        const toggleAdvancedSearchButtonText = document.getElementById("toggleAdvancedSearchButtonText");
-        const toggleAdvancedSearchLink = document.getElementById("toggleAdvancedSearchLink");
-        const showAdvancedOptionsButton = document.getElementById("showAdvancedOptionsButton");
-        const toggleIconCollapse = toggleAdvancedSearchButton.querySelector(".toggle-icon-collapse");
-        const toggleIconExpand = toggleAdvancedSearchButton.querySelector(".toggle-icon-expand");
         const scripturesTabButton = document.getElementById("scripturesTabButton");
         const statsTabButton = document.getElementById("statsTabButton");
         const scripturesContent = document.getElementById("scripturesContent");
@@ -342,18 +336,11 @@
             const isCurrentlyCollapsed = advancedSearchArea.classList.contains("collapsed");
             const shouldCollapse = forceCollapse === null ? !isCurrentlyCollapsed : forceCollapse;
             console.log(`Toggling advanced search. Currently collapsed: ${isCurrentlyCollapsed}, Forcing collapse: ${forceCollapse}, Will collapse: ${shouldCollapse}`);
-            
-            const showText = document.querySelector('#toggleAdvancedButton .show-text');
-            const hideText = document.querySelector('#toggleAdvancedButton .hide-text');
-            
+
             if (shouldCollapse) {
                 advancedSearchArea.classList.add("collapsed");
-                showText.classList.remove('hidden');
-                hideText.classList.add('hidden');
             } else {
                 advancedSearchArea.classList.remove("collapsed");
-                showText.classList.add('hidden');
-                hideText.classList.remove('hidden');
             }
         }
         
@@ -1848,8 +1835,6 @@
             console.log("Triggering initial data load.");
             fetchScriptureData().catch((err) => {console.error("Initial data load failed:", err);});
             toggleAdvancedSearchArea(false);
-            toggleAdvancedSearchButton.style.display = 'inline-flex';
-            toggleAdvancedSearchLink.style.display = 'none';
             clearStatisticsDisplay();
             populateStopWordsModal();
             updateJournalPreview(); // Initial call to set placeholder if empty

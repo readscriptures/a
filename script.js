@@ -130,15 +130,7 @@
         const cancelNoteButton = document.getElementById('cancelNoteButton');
         const modalCloseButton = noteModal ? noteModal.querySelector('.modal-close-button') : null;
 
-        // >>> ADD THESE LINES FOR DEBUGGING:
-        console.log("noteModal:", noteModal);
-        console.log("modalScriptureTextEl:", modalScriptureTextEl);
-        console.log("modalVerseTitleEl:", modalVerseTitleEl);
-        console.log("noteTextarea:", noteTextarea);
-        console.log("saveNoteButton:", saveNoteButton);
-        console.log("cancelNoteButton:", cancelNoteButton);
-        console.log("modalCloseButton:", modalCloseButton);
-        // <<< END DEBUGGING LINES
+
 
 
         // --- Dummy Scripture Data ---
@@ -1896,7 +1888,9 @@
                 });
             }
 
-            howToSearchButton.classList.add('opacity-0', 'pointer-events-none');
+            // Fade out the floating help button after a short delay
+            setTimeout(() => {
+                howToSearchButton.classList.add('opacity-0', 'pointer-events-none');
             }, 3000);
         });
 

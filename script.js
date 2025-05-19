@@ -109,6 +109,15 @@
         const compactActionGoogleSearchButton = document.getElementById("compactActionGoogleSearchButton");
         const compactActionChurchSiteLink = document.getElementById("compactActionChurchSiteLink");
 
+        // Modal for selected text actions
+        const textSelectionModal = document.getElementById('textSelectionModal');
+        const textSelectionModalCloseButton = document.getElementById('textSelectionModalCloseButton');
+        const textSelectionDisplay = document.getElementById('textSelectionDisplay');
+        const selectionCopyButton = document.getElementById('selectionCopyButton');
+        const selectionAddToJournalButton = document.getElementById('selectionAddToJournalButton');
+        const selectionSearchButton = document.getElementById('selectionSearchButton');
+        const selectionGoogleSearchButton = document.getElementById('selectionGoogleSearchButton');
+
         // Journal DOM Elements
         const journalEditor = document.getElementById("journalEditor");
         const journalPreview = document.getElementById("journalPreview");
@@ -218,6 +227,48 @@
             } else {
                 console.error("noteModal hideModal: noteModal element not found!");
             }
+        }
+
+        function openNoteModalForText(text, title, feedbackButton) {
+            if (!noteModal) return;
+            if (modalScriptureTextEl) modalScriptureTextEl.textContent = text;
+            if (modalVerseTitleEl) modalVerseTitleEl.textContent = title;
+
+            const handleSave = () => {
+                const userNote = noteTextarea.value.trim();
+                let appended = `> ${text} (${title})`;
+                if (userNote) appended = `${userNote}\n${appended}`;
+                if (journalEditor.value) appended = `\n\n${appended}`;
+                journalEditor.value += appended;
+                updateJournalPreview();
+                journalEditor.scrollTop = journalEditor.scrollHeight;
+                if (feedbackButton) showButtonFeedback(feedbackButton, '<span class="text-green-600">✓ Added!</span>');
+                cleanup();
+                hideModal();
+            };
+
+            const handleCancel = () => { cleanup(); hideModal(); };
+
+            const handleKey = (e) => { if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); handleSave(); } };
+
+            const cleanup = () => {
+                noteTextarea.removeEventListener('keydown', handleKey);
+                saveNoteButton.removeEventListener('click', handleSave);
+                if (cancelNoteButton) cancelNoteButton.removeEventListener('click', handleCancel);
+                if (modalCloseButton) modalCloseButton.removeEventListener('click', handleCancel);
+                noteModal.removeEventListener('click', overlayClick);
+            };
+
+            const overlayClick = (e) => { if (e.target === noteModal) handleCancel(); };
+
+            noteTextarea.value = '';
+            noteTextarea.addEventListener('keydown', handleKey);
+            saveNoteButton.addEventListener('click', handleSave, {once: true});
+            if (cancelNoteButton) cancelNoteButton.addEventListener('click', handleCancel, {once: true});
+            if (modalCloseButton) modalCloseButton.addEventListener('click', handleCancel, {once: true});
+            noteModal.addEventListener('click', overlayClick);
+
+            showModal();
         }
 
         // --- Data Fetching and Initialization ---
@@ -2077,5 +2128,77 @@
             compactActionChurchSiteLink.addEventListener('click', () => {
                 // Allow a moment for the new tab to open before closing.
                 setTimeout(() => closeModal(compactActionModal), 100);
+            });
+        }
+
+        // --- Highlighted Text Actions ---
+        let currentSelectedText = '';
+
+        function showTextSelectionModal(text) {
+            currentSelectedText = text;
+            if (textSelectionDisplay) textSelectionDisplay.textContent = text;
+            openModal(textSelectionModal);
+        }
+
+        function handleSelectionEvent() {
+            const selection = window.getSelection();
+            if (!selection || !selection.toString().trim()) return;
+            const text = selection.toString().trim();
+            const anchor = selection.anchorNode;
+            if (!anchor) return;
+            if (!resultsContainer.contains(anchor) && !contextDrawerContent.contains(anchor)) return;
+            selection.removeAllRanges();
+            showTextSelectionModal(text);
+        }
+
+        document.addEventListener('mouseup', handleSelectionEvent);
+        document.addEventListener('touchend', handleSelectionEvent);
+
+        if (textSelectionModalCloseButton) {
+            textSelectionModalCloseButton.addEventListener('click', () => closeModal(textSelectionModal));
+        }
+
+        if (textSelectionModal) {
+            textSelectionModal.addEventListener('click', (e) => { if (e.target === textSelectionModal) closeModal(textSelectionModal); });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && textSelectionModal.classList.contains('active')) {
+                closeModal(textSelectionModal);
+            }
+        });
+
+        if (selectionCopyButton) {
+            selectionCopyButton.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(currentSelectedText);
+                    showButtonFeedback(selectionCopyButton, '<span class="text-green-600">✓ Copied!</span>');
+                } catch (err) {
+                    console.error('Failed to copy text:', err);
+                    showButtonFeedback(selectionCopyButton, '<span class="text-red-600">Error</span>');
+                }
+                closeModal(textSelectionModal);
+            });
+        }
+
+        if (selectionAddToJournalButton) {
+            selectionAddToJournalButton.addEventListener('click', () => {
+                openNoteModalForText(currentSelectedText, 'Selected Text', selectionAddToJournalButton);
+                closeModal(textSelectionModal);
+            });
+        }
+
+        if (selectionSearchButton) {
+            selectionSearchButton.addEventListener('click', () => {
+                searchInput.value = currentSelectedText;
+                performSearch();
+                closeModal(textSelectionModal);
+            });
+        }
+
+        if (selectionGoogleSearchButton) {
+            selectionGoogleSearchButton.addEventListener('click', () => {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(currentSelectedText)}`, '_blank');
+                closeModal(textSelectionModal);
             });
         }

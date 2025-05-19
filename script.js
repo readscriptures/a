@@ -1897,7 +1897,6 @@
             }
 
             howToSearchButton.classList.add('opacity-0', 'pointer-events-none');
-            }, 3000);
         });
 
 
